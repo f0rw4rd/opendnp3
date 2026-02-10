@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -22,12 +23,15 @@
 
 #include "opendnp3/app/AnalogCommandEvent.h"
 #include "opendnp3/app/BinaryCommandEvent.h"
+#include "opendnp3/app/DeviceAttributes.h"
 #include "opendnp3/app/Indexed.h"
 #include "opendnp3/app/MeasurementTypes.h"
 #include "opendnp3/app/OctetString.h"
 #include "opendnp3/app/parsing/ICollection.h"
 #include "opendnp3/master/HeaderInfo.h"
 #include "opendnp3/master/ResponseInfo.h"
+
+#include <cstddef>
 
 namespace opendnp3
 {
@@ -49,6 +53,8 @@ public:
     virtual void BeginFragment(const ResponseInfo& info) = 0;
     virtual void EndFragment(const ResponseInfo& info) = 0;
 
+    virtual void OnRawAPDU(const ResponseInfo& info, const uint8_t* data, size_t length) {}
+
     virtual void Process(const HeaderInfo& info, const ICollection<Indexed<Binary>>& values) = 0;
     virtual void Process(const HeaderInfo& info, const ICollection<Indexed<DoubleBitBinary>>& values) = 0;
     virtual void Process(const HeaderInfo& info, const ICollection<Indexed<Analog>>& values) = 0;
@@ -60,7 +66,25 @@ public:
     virtual void Process(const HeaderInfo& info, const ICollection<Indexed<TimeAndInterval>>& values) = 0;
     virtual void Process(const HeaderInfo& info, const ICollection<Indexed<BinaryCommandEvent>>& values) = 0;
     virtual void Process(const HeaderInfo& info, const ICollection<Indexed<AnalogCommandEvent>>& values) = 0;
+    virtual void Process(const HeaderInfo& info, const ICollection<Indexed<AnalogInputDeadband>>& values) = 0;
     virtual void Process(const HeaderInfo& info, const ICollection<DNPTime>& values) = 0;
+
+    /**
+     * Called when a device attribute (Group 0) is received.
+     *
+     * @param info Header information
+     * @param set The attribute set (index from the range qualifier)
+     * @param variation The attribute variation number
+     * @param value Parsed attribute value
+     *
+     * Default implementation does nothing, so existing code is unaffected.
+     */
+    virtual void OnDeviceAttribute(const HeaderInfo& info,
+                                   uint8_t set,
+                                   uint8_t variation,
+                                   const DeviceAttributeValue& value)
+    {
+    }
 };
 
 } // namespace opendnp3

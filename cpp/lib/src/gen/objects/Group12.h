@@ -7,11 +7,12 @@
 // |_| \_|\___/  |______\__,_|_|\__|_|_| |_|\__, (_|_|_)
 //                                           __/ |
 //                                          |___/
-// 
+//
 // This file is auto-generated. Do not edit manually
-// 
+//
 // Copyright 2013-2022 Step Function I/O, LLC
-// 
+// Modified 2024-2026 f0rw4rd (experimental fork)
+//
 // Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
 // LLC (https://stepfunc.io) under one or more contributor license agreements.
 // See the NOTICE file distributed with this work for additional information
@@ -19,9 +20,9 @@
 // this file to you under the Apache License, Version 2.0 (the "License"); you
 // may not use this file except in compliance with the License. You may obtain
 // a copy of the License at:
-// 
+//
 //   http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,44 +33,110 @@
 #ifndef OPENDNP3_GROUP12_H
 #define OPENDNP3_GROUP12_H
 
-#include "opendnp3/app/GroupVariationID.h"
-#include <ser4cpp/container/SequenceTypes.h>
-#include "opendnp3/app/DNPTime.h"
 #include "app/DNP3Serializer.h"
-#include "opendnp3/app/ControlRelayOutputBlock.h"
 
-namespace opendnp3 {
+#include "opendnp3/app/ControlRelayOutputBlock.h"
+#include "opendnp3/app/DNPTime.h"
+#include "opendnp3/app/GroupVariationID.h"
+
+#include <ser4cpp/container/SequenceTypes.h>
+
+namespace opendnp3
+{
 
 // Binary Command - Any Variation
 struct Group12Var0
 {
-  static GroupVariationID ID() { return GroupVariationID(12,0); }
+    static GroupVariationID ID()
+    {
+        return GroupVariationID(12, 0);
+    }
 };
 
 // Binary Command - CROB
 struct Group12Var1
 {
-  static GroupVariationID ID() { return GroupVariationID(12,1); }
+    static GroupVariationID ID()
+    {
+        return GroupVariationID(12, 1);
+    }
 
-  Group12Var1();
+    Group12Var1();
 
-  static size_t Size() { return 11; }
-  static bool Read(ser4cpp::rseq_t&, Group12Var1&);
-  static bool Write(const Group12Var1&, ser4cpp::wseq_t&);
+    static size_t Size()
+    {
+        return 11;
+    }
+    static bool Read(ser4cpp::rseq_t&, Group12Var1&);
+    static bool Write(const Group12Var1&, ser4cpp::wseq_t&);
 
-  uint8_t code;
-  uint8_t count;
-  uint32_t onTime;
-  uint32_t offTime;
-  uint8_t status;
+    uint8_t code;
+    uint8_t count;
+    uint32_t onTime;
+    uint32_t offTime;
+    uint8_t status;
 
-  typedef ControlRelayOutputBlock Target;
-  static bool ReadTarget(ser4cpp::rseq_t&, ControlRelayOutputBlock&);
-  static bool WriteTarget(const ControlRelayOutputBlock&, ser4cpp::wseq_t&);
-  static DNP3Serializer<ControlRelayOutputBlock> Inst() { return DNP3Serializer<ControlRelayOutputBlock>(ID(), Size(), &ReadTarget, &WriteTarget); }
+    typedef ControlRelayOutputBlock Target;
+    static bool ReadTarget(ser4cpp::rseq_t&, ControlRelayOutputBlock&);
+    static bool WriteTarget(const ControlRelayOutputBlock&, ser4cpp::wseq_t&);
+    static DNP3Serializer<ControlRelayOutputBlock> Inst()
+    {
+        return DNP3Serializer<ControlRelayOutputBlock>(ID(), Size(), &ReadTarget, &WriteTarget);
+    }
 };
 
+// Binary Command - Pattern Control Block
+struct Group12Var2
+{
+    static GroupVariationID ID()
+    {
+        return GroupVariationID(12, 2);
+    }
 
-}
+    Group12Var2();
+
+    static size_t Size()
+    {
+        return 11;
+    }
+    static bool Read(ser4cpp::rseq_t&, Group12Var2&);
+    static bool Write(const Group12Var2&, ser4cpp::wseq_t&);
+
+    uint8_t code;
+    uint8_t count;
+    uint32_t onTime;
+    uint32_t offTime;
+    uint8_t status;
+
+    typedef ControlRelayOutputBlock Target;
+    static bool ReadTarget(ser4cpp::rseq_t&, ControlRelayOutputBlock&);
+    static bool WriteTarget(const ControlRelayOutputBlock&, ser4cpp::wseq_t&);
+    static DNP3Serializer<ControlRelayOutputBlock> Inst()
+    {
+        return DNP3Serializer<ControlRelayOutputBlock>(ID(), Size(), &ReadTarget, &WriteTarget);
+    }
+};
+
+// Binary Command - Pattern Mask
+struct Group12Var3
+{
+    static GroupVariationID ID()
+    {
+        return GroupVariationID(12, 3);
+    }
+
+    Group12Var3();
+
+    static size_t Size()
+    {
+        return 1;
+    }
+    static bool Read(ser4cpp::rseq_t&, Group12Var3&);
+    static bool Write(const Group12Var3&, ser4cpp::wseq_t&);
+
+    uint8_t mask;
+};
+
+} // namespace opendnp3
 
 #endif

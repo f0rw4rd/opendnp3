@@ -7,11 +7,12 @@
 // |_| \_|\___/  |______\__,_|_|\__|_|_| |_|\__, (_|_|_)
 //                                           __/ |
 //                                          |___/
-// 
+//
 // This file is auto-generated. Do not edit manually
-// 
+//
 // Copyright 2013-2022 Step Function I/O, LLC
-// 
+// Modified 2024-2026 f0rw4rd (experimental fork)
+//
 // Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
 // LLC (https://stepfunc.io) under one or more contributor license agreements.
 // See the NOTICE file distributed with this work for additional information
@@ -19,9 +20,9 @@
 // this file to you under the Apache License, Version 2.0 (the "License"); you
 // may not use this file except in compliance with the License. You may obtain
 // a copy of the License at:
-// 
+//
 //   http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,48 +32,97 @@
 
 #include "Group12.h"
 
-#include "app/parsing/DNPTimeParsing.h"
-#include <ser4cpp/serialization/LittleEndian.h>
 #include "app/MeasurementFactory.h"
 #include "app/WriteConversions.h"
+#include "app/parsing/DNPTimeParsing.h"
+
+#include <ser4cpp/serialization/LittleEndian.h>
 
 using namespace ser4cpp;
 
-namespace opendnp3 {
+namespace opendnp3
+{
 
 // ------- Group12Var1 -------
 
-Group12Var1::Group12Var1() : code(0), count(0), onTime(0), offTime(0), status(0)
-{}
+Group12Var1::Group12Var1() : code(0), count(0), onTime(0), offTime(0), status(0) {}
 
 bool Group12Var1::Read(rseq_t& buffer, Group12Var1& output)
 {
-  return LittleEndian::read(buffer, output.code, output.count, output.onTime, output.offTime, output.status);
+    return LittleEndian::read(buffer, output.code, output.count, output.onTime, output.offTime, output.status);
 }
 
 bool Group12Var1::Write(const Group12Var1& arg, ser4cpp::wseq_t& buffer)
 {
-  return LittleEndian::write(buffer, arg.code, arg.count, arg.onTime, arg.offTime, arg.status);
+    return LittleEndian::write(buffer, arg.code, arg.count, arg.onTime, arg.offTime, arg.status);
 }
 
 bool Group12Var1::ReadTarget(rseq_t& buff, ControlRelayOutputBlock& output)
 {
-  Group12Var1 value;
-  if(Read(buff, value))
-  {
-    output = ControlRelayOutputBlockFactory::From(value.code, value.count, value.onTime, value.offTime, value.status);
-    return true;
-  }
-  else
-  {
-    return false;
-  }
+    Group12Var1 value;
+    if (Read(buff, value))
+    {
+        output
+            = ControlRelayOutputBlockFactory::From(value.code, value.count, value.onTime, value.offTime, value.status);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 bool Group12Var1::WriteTarget(const ControlRelayOutputBlock& value, ser4cpp::wseq_t& buff)
 {
-  return Group12Var1::Write(ConvertGroup12Var1::Apply(value), buff);
+    return Group12Var1::Write(ConvertGroup12Var1::Apply(value), buff);
 }
 
+// ------- Group12Var2 -------
 
+Group12Var2::Group12Var2() : code(0), count(0), onTime(0), offTime(0), status(0) {}
+
+bool Group12Var2::Read(rseq_t& buffer, Group12Var2& output)
+{
+    return LittleEndian::read(buffer, output.code, output.count, output.onTime, output.offTime, output.status);
 }
+
+bool Group12Var2::Write(const Group12Var2& arg, ser4cpp::wseq_t& buffer)
+{
+    return LittleEndian::write(buffer, arg.code, arg.count, arg.onTime, arg.offTime, arg.status);
+}
+
+bool Group12Var2::ReadTarget(rseq_t& buff, ControlRelayOutputBlock& output)
+{
+    Group12Var2 value;
+    if (Read(buff, value))
+    {
+        output
+            = ControlRelayOutputBlockFactory::From(value.code, value.count, value.onTime, value.offTime, value.status);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool Group12Var2::WriteTarget(const ControlRelayOutputBlock& value, ser4cpp::wseq_t& buff)
+{
+    return Group12Var2::Write(ConvertGroup12Var2::Apply(value), buff);
+}
+
+// ------- Group12Var3 -------
+
+Group12Var3::Group12Var3() : mask(0) {}
+
+bool Group12Var3::Read(rseq_t& buffer, Group12Var3& output)
+{
+    return LittleEndian::read(buffer, output.mask);
+}
+
+bool Group12Var3::Write(const Group12Var3& arg, ser4cpp::wseq_t& buffer)
+{
+    return LittleEndian::write(buffer, arg.mask);
+}
+
+} // namespace opendnp3

@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -32,6 +33,7 @@
 #include "opendnp3/app/AnalogOutput.h"
 #include "opendnp3/app/BinaryCommandEvent.h"
 #include "opendnp3/app/ControlRelayOutputBlock.h"
+#include "opendnp3/app/DeviceAttributes.h"
 #include "opendnp3/app/IINField.h"
 #include "opendnp3/app/Indexed.h"
 #include "opendnp3/app/MeasurementTypes.h"
@@ -74,6 +76,7 @@ public:
     void OnHeader(const RangeHeader& header, const ICollection<Indexed<AnalogOutputStatus>>& values);
     void OnHeader(const RangeHeader& header, const ICollection<Indexed<OctetString>>& values);
     void OnHeader(const RangeHeader& header, const ICollection<Indexed<TimeAndInterval>>& values);
+    void OnHeader(const RangeHeader& header, const ICollection<Indexed<AnalogInputDeadband>>& values);
 
     // events
 
@@ -88,6 +91,7 @@ public:
     void OnHeader(const PrefixHeader& header, const ICollection<Indexed<TimeAndInterval>>& values);
     void OnHeader(const PrefixHeader& header, const ICollection<Indexed<BinaryCommandEvent>>& values);
     void OnHeader(const PrefixHeader& header, const ICollection<Indexed<AnalogCommandEvent>>& values);
+    void OnHeader(const PrefixHeader& header, const ICollection<Indexed<AnalogInputDeadband>>& values);
 
     // adhoc read by index
     void OnHeader(const PrefixHeader& header, const ICollection<uint16_t>& values);
@@ -99,6 +103,9 @@ public:
     void OnHeader(const PrefixHeader& header, const ICollection<Indexed<AnalogOutputInt32>>& values);
     void OnHeader(const PrefixHeader& header, const ICollection<Indexed<AnalogOutputFloat32>>& values);
     void OnHeader(const PrefixHeader& header, const ICollection<Indexed<AnalogOutputDouble64>>& values);
+
+    // Device attribute callback (Group 0)
+    virtual void OnDeviceAttribute(uint8_t set, uint8_t variation, const DeviceAttributeValue& value) {}
 
 protected:
     void Reset();
@@ -139,6 +146,7 @@ protected:
     virtual IINField ProcessHeader(const RangeHeader& header, const ICollection<Indexed<AnalogOutputStatus>>& values);
     virtual IINField ProcessHeader(const RangeHeader& header, const ICollection<Indexed<OctetString>>& values);
     virtual IINField ProcessHeader(const RangeHeader& header, const ICollection<Indexed<TimeAndInterval>>& values);
+    virtual IINField ProcessHeader(const RangeHeader& header, const ICollection<Indexed<AnalogInputDeadband>>& values);
 
     virtual IINField ProcessHeader(const PrefixHeader& header, const ICollection<Indexed<Binary>>& values);
     virtual IINField ProcessHeader(const PrefixHeader& header, const ICollection<Indexed<BinaryOutputStatus>>& values);
@@ -151,6 +159,7 @@ protected:
     virtual IINField ProcessHeader(const PrefixHeader& header, const ICollection<Indexed<TimeAndInterval>>& values);
     virtual IINField ProcessHeader(const PrefixHeader& header, const ICollection<Indexed<BinaryCommandEvent>>& values);
     virtual IINField ProcessHeader(const PrefixHeader& header, const ICollection<Indexed<AnalogCommandEvent>>& values);
+    virtual IINField ProcessHeader(const PrefixHeader& header, const ICollection<Indexed<AnalogInputDeadband>>& values);
 
     // adhoc read by index
     virtual IINField ProcessHeader(const PrefixHeader& header, const ICollection<uint16_t>& values);

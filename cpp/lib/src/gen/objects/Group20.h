@@ -7,11 +7,12 @@
 // |_| \_|\___/  |______\__,_|_|\__|_|_| |_|\__, (_|_|_)
 //                                           __/ |
 //                                          |___/
-// 
+//
 // This file is auto-generated. Do not edit manually
-// 
+//
 // Copyright 2013-2022 Step Function I/O, LLC
-// 
+// Modified 2024-2026 f0rw4rd (experimental fork)
+//
 // Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
 // LLC (https://stepfunc.io) under one or more contributor license agreements.
 // See the NOTICE file distributed with this work for additional information
@@ -19,9 +20,9 @@
 // this file to you under the Apache License, Version 2.0 (the "License"); you
 // may not use this file except in compliance with the License. You may obtain
 // a copy of the License at:
-// 
+//
 //   http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,111 +33,274 @@
 #ifndef OPENDNP3_GROUP20_H
 #define OPENDNP3_GROUP20_H
 
-#include "opendnp3/app/GroupVariationID.h"
-#include <ser4cpp/container/SequenceTypes.h>
-#include "opendnp3/app/DNPTime.h"
 #include "app/DNP3Serializer.h"
 #include "app/MeasurementTypeSpecs.h"
 
-namespace opendnp3 {
+#include "opendnp3/app/DNPTime.h"
+#include "opendnp3/app/GroupVariationID.h"
+
+#include <ser4cpp/container/SequenceTypes.h>
+
+namespace opendnp3
+{
 
 // Counter - Any Variation
 struct Group20Var0
 {
-  static GroupVariationID ID() { return GroupVariationID(20,0); }
+    static GroupVariationID ID()
+    {
+        return GroupVariationID(20, 0);
+    }
 };
 
 // Counter - 32-bit With Flag
 struct Group20Var1
 {
-  static GroupVariationID ID() { return GroupVariationID(20,1); }
+    static GroupVariationID ID()
+    {
+        return GroupVariationID(20, 1);
+    }
 
-  Group20Var1();
+    Group20Var1();
 
-  static size_t Size() { return 5; }
-  static bool Read(ser4cpp::rseq_t&, Group20Var1&);
-  static bool Write(const Group20Var1&, ser4cpp::wseq_t&);
+    static size_t Size()
+    {
+        return 5;
+    }
+    static bool Read(ser4cpp::rseq_t&, Group20Var1&);
+    static bool Write(const Group20Var1&, ser4cpp::wseq_t&);
 
-  typedef uint32_t ValueType;
-  uint8_t flags;
-  uint32_t value;
+    typedef uint32_t ValueType;
+    uint8_t flags;
+    uint32_t value;
 
-  typedef Counter Target;
-  typedef CounterSpec Spec;
-  static bool ReadTarget(ser4cpp::rseq_t&, Counter&);
-  static bool WriteTarget(const Counter&, ser4cpp::wseq_t&);
-  static DNP3Serializer<Counter> Inst() { return DNP3Serializer<Counter>(ID(), Size(), &ReadTarget, &WriteTarget); }
-  static const StaticCounterVariation svariation = StaticCounterVariation::Group20Var1;
+    typedef Counter Target;
+    typedef CounterSpec Spec;
+    static bool ReadTarget(ser4cpp::rseq_t&, Counter&);
+    static bool WriteTarget(const Counter&, ser4cpp::wseq_t&);
+    static DNP3Serializer<Counter> Inst()
+    {
+        return DNP3Serializer<Counter>(ID(), Size(), &ReadTarget, &WriteTarget);
+    }
+    static const StaticCounterVariation svariation = StaticCounterVariation::Group20Var1;
 };
 
 // Counter - 16-bit With Flag
 struct Group20Var2
 {
-  static GroupVariationID ID() { return GroupVariationID(20,2); }
+    static GroupVariationID ID()
+    {
+        return GroupVariationID(20, 2);
+    }
 
-  Group20Var2();
+    Group20Var2();
 
-  static size_t Size() { return 3; }
-  static bool Read(ser4cpp::rseq_t&, Group20Var2&);
-  static bool Write(const Group20Var2&, ser4cpp::wseq_t&);
+    static size_t Size()
+    {
+        return 3;
+    }
+    static bool Read(ser4cpp::rseq_t&, Group20Var2&);
+    static bool Write(const Group20Var2&, ser4cpp::wseq_t&);
 
-  typedef uint16_t ValueType;
-  uint8_t flags;
-  uint16_t value;
+    typedef uint16_t ValueType;
+    uint8_t flags;
+    uint16_t value;
 
-  typedef Counter Target;
-  typedef CounterSpec Spec;
-  static bool ReadTarget(ser4cpp::rseq_t&, Counter&);
-  static bool WriteTarget(const Counter&, ser4cpp::wseq_t&);
-  static DNP3Serializer<Counter> Inst() { return DNP3Serializer<Counter>(ID(), Size(), &ReadTarget, &WriteTarget); }
-  static const StaticCounterVariation svariation = StaticCounterVariation::Group20Var2;
+    typedef Counter Target;
+    typedef CounterSpec Spec;
+    static bool ReadTarget(ser4cpp::rseq_t&, Counter&);
+    static bool WriteTarget(const Counter&, ser4cpp::wseq_t&);
+    static DNP3Serializer<Counter> Inst()
+    {
+        return DNP3Serializer<Counter>(ID(), Size(), &ReadTarget, &WriteTarget);
+    }
+    static const StaticCounterVariation svariation = StaticCounterVariation::Group20Var2;
+};
+
+// Delta Counter - 32-bit With Flag
+struct Group20Var3
+{
+    static GroupVariationID ID()
+    {
+        return GroupVariationID(20, 3);
+    }
+
+    Group20Var3();
+
+    static size_t Size()
+    {
+        return 5;
+    }
+    static bool Read(ser4cpp::rseq_t&, Group20Var3&);
+    static bool Write(const Group20Var3&, ser4cpp::wseq_t&);
+
+    typedef uint32_t ValueType;
+    uint8_t flags;
+    uint32_t value;
+
+    typedef Counter Target;
+    typedef CounterSpec Spec;
+    static bool ReadTarget(ser4cpp::rseq_t&, Counter&);
+    static bool WriteTarget(const Counter&, ser4cpp::wseq_t&);
+    static DNP3Serializer<Counter> Inst()
+    {
+        return DNP3Serializer<Counter>(ID(), Size(), &ReadTarget, &WriteTarget);
+    }
+};
+
+// Delta Counter - 16-bit With Flag
+struct Group20Var4
+{
+    static GroupVariationID ID()
+    {
+        return GroupVariationID(20, 4);
+    }
+
+    Group20Var4();
+
+    static size_t Size()
+    {
+        return 3;
+    }
+    static bool Read(ser4cpp::rseq_t&, Group20Var4&);
+    static bool Write(const Group20Var4&, ser4cpp::wseq_t&);
+
+    typedef uint16_t ValueType;
+    uint8_t flags;
+    uint16_t value;
+
+    typedef Counter Target;
+    typedef CounterSpec Spec;
+    static bool ReadTarget(ser4cpp::rseq_t&, Counter&);
+    static bool WriteTarget(const Counter&, ser4cpp::wseq_t&);
+    static DNP3Serializer<Counter> Inst()
+    {
+        return DNP3Serializer<Counter>(ID(), Size(), &ReadTarget, &WriteTarget);
+    }
 };
 
 // Counter - 32-bit Without Flag
 struct Group20Var5
 {
-  static GroupVariationID ID() { return GroupVariationID(20,5); }
+    static GroupVariationID ID()
+    {
+        return GroupVariationID(20, 5);
+    }
 
-  Group20Var5();
+    Group20Var5();
 
-  static size_t Size() { return 4; }
-  static bool Read(ser4cpp::rseq_t&, Group20Var5&);
-  static bool Write(const Group20Var5&, ser4cpp::wseq_t&);
+    static size_t Size()
+    {
+        return 4;
+    }
+    static bool Read(ser4cpp::rseq_t&, Group20Var5&);
+    static bool Write(const Group20Var5&, ser4cpp::wseq_t&);
 
-  typedef uint32_t ValueType;
-  uint32_t value;
+    typedef uint32_t ValueType;
+    uint32_t value;
 
-  typedef Counter Target;
-  typedef CounterSpec Spec;
-  static bool ReadTarget(ser4cpp::rseq_t&, Counter&);
-  static bool WriteTarget(const Counter&, ser4cpp::wseq_t&);
-  static DNP3Serializer<Counter> Inst() { return DNP3Serializer<Counter>(ID(), Size(), &ReadTarget, &WriteTarget); }
-  static const StaticCounterVariation svariation = StaticCounterVariation::Group20Var5;
+    typedef Counter Target;
+    typedef CounterSpec Spec;
+    static bool ReadTarget(ser4cpp::rseq_t&, Counter&);
+    static bool WriteTarget(const Counter&, ser4cpp::wseq_t&);
+    static DNP3Serializer<Counter> Inst()
+    {
+        return DNP3Serializer<Counter>(ID(), Size(), &ReadTarget, &WriteTarget);
+    }
+    static const StaticCounterVariation svariation = StaticCounterVariation::Group20Var5;
 };
 
 // Counter - 16-bit Without Flag
 struct Group20Var6
 {
-  static GroupVariationID ID() { return GroupVariationID(20,6); }
+    static GroupVariationID ID()
+    {
+        return GroupVariationID(20, 6);
+    }
 
-  Group20Var6();
+    Group20Var6();
 
-  static size_t Size() { return 2; }
-  static bool Read(ser4cpp::rseq_t&, Group20Var6&);
-  static bool Write(const Group20Var6&, ser4cpp::wseq_t&);
+    static size_t Size()
+    {
+        return 2;
+    }
+    static bool Read(ser4cpp::rseq_t&, Group20Var6&);
+    static bool Write(const Group20Var6&, ser4cpp::wseq_t&);
 
-  typedef uint16_t ValueType;
-  uint16_t value;
+    typedef uint16_t ValueType;
+    uint16_t value;
 
-  typedef Counter Target;
-  typedef CounterSpec Spec;
-  static bool ReadTarget(ser4cpp::rseq_t&, Counter&);
-  static bool WriteTarget(const Counter&, ser4cpp::wseq_t&);
-  static DNP3Serializer<Counter> Inst() { return DNP3Serializer<Counter>(ID(), Size(), &ReadTarget, &WriteTarget); }
-  static const StaticCounterVariation svariation = StaticCounterVariation::Group20Var6;
+    typedef Counter Target;
+    typedef CounterSpec Spec;
+    static bool ReadTarget(ser4cpp::rseq_t&, Counter&);
+    static bool WriteTarget(const Counter&, ser4cpp::wseq_t&);
+    static DNP3Serializer<Counter> Inst()
+    {
+        return DNP3Serializer<Counter>(ID(), Size(), &ReadTarget, &WriteTarget);
+    }
+    static const StaticCounterVariation svariation = StaticCounterVariation::Group20Var6;
 };
 
+// Delta Counter - 32-bit Without Flag
+struct Group20Var7
+{
+    static GroupVariationID ID()
+    {
+        return GroupVariationID(20, 7);
+    }
 
-}
+    Group20Var7();
+
+    static size_t Size()
+    {
+        return 4;
+    }
+    static bool Read(ser4cpp::rseq_t&, Group20Var7&);
+    static bool Write(const Group20Var7&, ser4cpp::wseq_t&);
+
+    typedef uint32_t ValueType;
+    uint32_t value;
+
+    typedef Counter Target;
+    typedef CounterSpec Spec;
+    static bool ReadTarget(ser4cpp::rseq_t&, Counter&);
+    static bool WriteTarget(const Counter&, ser4cpp::wseq_t&);
+    static DNP3Serializer<Counter> Inst()
+    {
+        return DNP3Serializer<Counter>(ID(), Size(), &ReadTarget, &WriteTarget);
+    }
+};
+
+// Delta Counter - 16-bit Without Flag
+struct Group20Var8
+{
+    static GroupVariationID ID()
+    {
+        return GroupVariationID(20, 8);
+    }
+
+    Group20Var8();
+
+    static size_t Size()
+    {
+        return 2;
+    }
+    static bool Read(ser4cpp::rseq_t&, Group20Var8&);
+    static bool Write(const Group20Var8&, ser4cpp::wseq_t&);
+
+    typedef uint16_t ValueType;
+    uint16_t value;
+
+    typedef Counter Target;
+    typedef CounterSpec Spec;
+    static bool ReadTarget(ser4cpp::rseq_t&, Counter&);
+    static bool WriteTarget(const Counter&, ser4cpp::wseq_t&);
+    static DNP3Serializer<Counter> Inst()
+    {
+        return DNP3Serializer<Counter>(ID(), Size(), &ReadTarget, &WriteTarget);
+    }
+};
+
+} // namespace opendnp3
 
 #endif

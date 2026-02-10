@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -143,6 +144,12 @@ AnalogOutputStatus::AnalogOutputStatus(double value, Flags flags, DNPTime time)
     : TypedMeasurement<double>(value, flags, time)
 {
 }
+
+// ------------ AnalogInputDeadband ---------------
+
+AnalogInputDeadband::AnalogInputDeadband() : value(0.0) {}
+
+AnalogInputDeadband::AnalogInputDeadband(double value) : value(value) {}
 
 // ------------ TimeAndInterval ---------------
 

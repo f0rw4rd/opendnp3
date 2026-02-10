@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -121,6 +122,12 @@ public:
         this->RecordAny(info, values, this->analogCommandEventSOE);
     }
 
+    void Process(const opendnp3::HeaderInfo& info,
+                 const opendnp3::ICollection<opendnp3::Indexed<opendnp3::AnalogInputDeadband>>& values) final
+    {
+        this->RecordAny(info, values, this->analogInputDeadbandSOE);
+    }
+
     void Process(const opendnp3::HeaderInfo& info, const opendnp3::ICollection<opendnp3::DNPTime>& values) final
     {
         values.ForeachItem([this](const opendnp3::DNPTime& value) {
@@ -144,6 +151,7 @@ public:
         timeAndIntervalSOE.clear();
         binaryCommandEventSOE.clear();
         analogCommandEventSOE.clear();
+        analogInputDeadbandSOE.clear();
         timeSOE.clear();
     }
 
@@ -158,6 +166,7 @@ public:
     std::map<uint16_t, Record<opendnp3::TimeAndInterval>> timeAndIntervalSOE;
     std::map<uint16_t, Record<opendnp3::BinaryCommandEvent>> binaryCommandEventSOE;
     std::map<uint16_t, Record<opendnp3::AnalogCommandEvent>> analogCommandEventSOE;
+    std::map<uint16_t, Record<opendnp3::AnalogInputDeadband>> analogInputDeadbandSOE;
     std::vector<opendnp3::DNPTime> timeSOE;
 
 private:

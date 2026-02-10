@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -33,7 +34,9 @@
 #include "gen/objects/Group23.h"
 #include "gen/objects/Group3.h"
 #include "gen/objects/Group30.h"
+#include "gen/objects/Group31.h"
 #include "gen/objects/Group32.h"
+#include "gen/objects/Group33.h"
 #include "gen/objects/Group4.h"
 #include "gen/objects/Group40.h"
 #include "gen/objects/Group41.h"
@@ -84,6 +87,20 @@ struct ConvertGroup12Var1 : private StaticOnly
     }
 };
 
+struct ConvertGroup12Var2 : private StaticOnly
+{
+    static Group12Var2 Apply(const ControlRelayOutputBlock& crob)
+    {
+        Group12Var2 ret;
+        ret.code = crob.rawCode;
+        ret.count = crob.count;
+        ret.onTime = crob.onTimeMS;
+        ret.offTime = crob.offTimeMS;
+        ret.status = CommandStatusSpec::to_type(crob.status);
+        return ret;
+    }
+};
+
 // Group 13
 struct ConvertGroup13Var1 : private StaticOnly
 {
@@ -109,32 +126,50 @@ struct ConvertGroup13Var2 : private StaticOnly
 // Group 20
 typedef ConvertQV<Group20Var1, Counter> ConvertGroup20Var1;
 typedef ConvertQVandTruncate<Group20Var2, Counter> ConvertGroup20Var2;
+typedef ConvertQV<Group20Var3, Counter> ConvertGroup20Var3;
+typedef ConvertQVandTruncate<Group20Var4, Counter> ConvertGroup20Var4;
 
 typedef ConvertV<Group20Var5, Counter> ConvertGroup20Var5;
 typedef ConvertVandTruncate<Group20Var6, Counter> ConvertGroup20Var6;
+typedef ConvertV<Group20Var7, Counter> ConvertGroup20Var7;
+typedef ConvertVandTruncate<Group20Var8, Counter> ConvertGroup20Var8;
 
 // Group 21
 typedef ConvertQV<Group21Var1, FrozenCounter> ConvertGroup21Var1;
 typedef ConvertQVandTruncate<Group21Var2, FrozenCounter> ConvertGroup21Var2;
+typedef ConvertQV<Group21Var3, FrozenCounter> ConvertGroup21Var3;
+typedef ConvertQVandTruncate<Group21Var4, FrozenCounter> ConvertGroup21Var4;
 
 typedef ConvertQVT<Group21Var5, FrozenCounter> ConvertGroup21Var5;
 typedef ConvertQVTandTruncate<Group21Var6, FrozenCounter> ConvertGroup21Var6;
+typedef ConvertQVT<Group21Var7, FrozenCounter> ConvertGroup21Var7;
+typedef ConvertQVTandTruncate<Group21Var8, FrozenCounter> ConvertGroup21Var8;
 
 typedef ConvertV<Group21Var9, FrozenCounter> ConvertGroup21Var9;
 typedef ConvertVandTruncate<Group21Var10, FrozenCounter> ConvertGroup21Var10;
+typedef ConvertV<Group21Var11, FrozenCounter> ConvertGroup21Var11;
+typedef ConvertVandTruncate<Group21Var12, FrozenCounter> ConvertGroup21Var12;
 
 // Group 22
 typedef ConvertQV<Group22Var1, Counter> ConvertGroup22Var1;
 typedef ConvertQVandTruncate<Group22Var2, Counter> ConvertGroup22Var2;
+typedef ConvertQV<Group22Var3, Counter> ConvertGroup22Var3;
+typedef ConvertQVandTruncate<Group22Var4, Counter> ConvertGroup22Var4;
 
 typedef ConvertQVT<Group22Var5, Counter> ConvertGroup22Var5;
 typedef ConvertQVTandTruncate<Group22Var6, Counter> ConvertGroup22Var6;
+typedef ConvertQVT<Group22Var7, Counter> ConvertGroup22Var7;
+typedef ConvertQVTandTruncate<Group22Var8, Counter> ConvertGroup22Var8;
 
 // Group 23
 typedef ConvertQV<Group23Var1, FrozenCounter> ConvertGroup23Var1;
 typedef ConvertQVandTruncate<Group23Var2, FrozenCounter> ConvertGroup23Var2;
+typedef ConvertQV<Group23Var3, FrozenCounter> ConvertGroup23Var3;
+typedef ConvertQVandTruncate<Group23Var4, FrozenCounter> ConvertGroup23Var4;
 typedef ConvertQVT<Group23Var5, FrozenCounter> ConvertGroup23Var5;
 typedef ConvertQVTandTruncate<Group23Var6, FrozenCounter> ConvertGroup23Var6;
+typedef ConvertQVT<Group23Var7, FrozenCounter> ConvertGroup23Var7;
+typedef ConvertQVTandTruncate<Group23Var8, FrozenCounter> ConvertGroup23Var8;
 
 // Group 30
 typedef ConvertQVRangeCheck<Group30Var1, Analog, 0x20> ConvertGroup30Var1;
@@ -143,6 +178,16 @@ typedef ConvertVRangeCheck<Group30Var3, Analog> ConvertGroup30Var3;
 typedef ConvertVRangeCheck<Group30Var4, Analog> ConvertGroup30Var4;
 typedef ConvertQVRangeCheck<Group30Var5, Analog, 0x20> ConvertGroup30Var5;
 typedef ConvertQV<Group30Var6, Analog> ConvertGroup30Var6;
+
+// Group 31
+typedef ConvertQVRangeCheck<Group31Var1, Analog, 0x20> ConvertGroup31Var1;
+typedef ConvertQVRangeCheck<Group31Var2, Analog, 0x20> ConvertGroup31Var2;
+typedef ConvertQVTRangeCheck<Group31Var3, Analog, 0x20> ConvertGroup31Var3;
+typedef ConvertQVTRangeCheck<Group31Var4, Analog, 0x20> ConvertGroup31Var4;
+typedef ConvertVRangeCheck<Group31Var5, Analog> ConvertGroup31Var5;
+typedef ConvertVRangeCheck<Group31Var6, Analog> ConvertGroup31Var6;
+typedef ConvertQVRangeCheck<Group31Var7, Analog, 0x20> ConvertGroup31Var7;
+typedef ConvertQV<Group31Var8, Analog> ConvertGroup31Var8;
 
 // Group 32
 typedef ConvertQVRangeCheck<Group32Var1, Analog, 0x20> ConvertGroup32Var1;
@@ -153,6 +198,16 @@ typedef ConvertQVRangeCheck<Group32Var5, Analog, 0x20> ConvertGroup32Var5;
 typedef ConvertQV<Group32Var6, Analog> ConvertGroup32Var6;
 typedef ConvertQVTRangeCheck<Group32Var7, Analog, 0x20> ConvertGroup32Var7;
 typedef ConvertQVT<Group32Var8, Analog> ConvertGroup32Var8;
+
+// Group 33
+typedef ConvertQVRangeCheck<Group33Var1, Analog, 0x20> ConvertGroup33Var1;
+typedef ConvertQVRangeCheck<Group33Var2, Analog, 0x20> ConvertGroup33Var2;
+typedef ConvertQVTRangeCheck<Group33Var3, Analog, 0x20> ConvertGroup33Var3;
+typedef ConvertQVTRangeCheck<Group33Var4, Analog, 0x20> ConvertGroup33Var4;
+typedef ConvertQVRangeCheck<Group33Var5, Analog, 0x20> ConvertGroup33Var5;
+typedef ConvertQV<Group33Var6, Analog> ConvertGroup33Var6;
+typedef ConvertQVTRangeCheck<Group33Var7, Analog, 0x20> ConvertGroup33Var7;
+typedef ConvertQVT<Group33Var8, Analog> ConvertGroup33Var8;
 
 typedef ConvertQVRangeCheck<Group40Var1, AnalogOutputStatus, 0x20> ConvertGroup40Var1;
 typedef ConvertQVRangeCheck<Group40Var2, AnalogOutputStatus, 0x20> ConvertGroup40Var2;

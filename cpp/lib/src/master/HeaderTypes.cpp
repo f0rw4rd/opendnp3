@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -64,6 +65,14 @@ Header Header::Count16(uint8_t group, uint8_t variation, uint16_t count)
     return Header(group, variation, count);
 }
 
+Header Header::Raw(const uint8_t* data, size_t length)
+{
+    Header h;
+    h.type = HeaderType::Raw;
+    h.rawData = std::make_shared<std::vector<uint8_t>>(data, data + length);
+    return h;
+}
+
 Header::Header(uint8_t group, uint8_t var) : id(group, var), type(HeaderType::AllObjects) {}
 
 Header::Header(uint8_t group, uint8_t var, uint8_t start, uint8_t stop) : id(group, var), type(HeaderType::Ranged8)
@@ -102,6 +111,8 @@ bool Header::WriteTo(HeaderWriter& writer) const
         return writer.WriteCountHeader<ser4cpp::UInt8>(QualifierCode::UINT8_CNT, id, value.count8.value);
     case (HeaderType::LimitedCount16):
         return writer.WriteCountHeader<ser4cpp::UInt16>(QualifierCode::UINT16_CNT, id, value.count16.value);
+    case (HeaderType::Raw):
+        return rawData ? writer.WriteRawBytes(rawData->data(), rawData->size()) : false;
     default:
         return false;
     }

@@ -23,6 +23,7 @@
 #include "LinkContext.h"
 #include "LinkLayerConfig.h"
 
+#include <functional>
 #include <memory>
 
 namespace opendnp3
@@ -53,6 +54,9 @@ public:
     virtual bool Send(ITransportSegment& segments) override;
 
     const StackStatistics::Link& GetStatistics() const;
+
+    /// Manually trigger a link status check with a callback
+    void CheckLinkStatus(std::function<void(bool)> callback);
 
 private:
     // The full state

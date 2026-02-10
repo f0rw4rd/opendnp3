@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -66,7 +67,8 @@ public:
     std::shared_ptr<IOutstation> AddOutstation(const std::string& id,
                                                std::shared_ptr<ICommandHandler> commandHandler,
                                                std::shared_ptr<IOutstationApplication> application,
-                                               const OutstationStackConfig& config) final;
+                                               const OutstationStackConfig& config,
+                                               std::shared_ptr<IFileHandler> fileHandler = nullptr) final;
 
 private:
     void ShutdownImpl();

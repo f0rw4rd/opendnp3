@@ -101,4 +101,9 @@ bool LinkLayer::OnFrame(const LinkHeaderFields& header, const ser4cpp::rseq_t& u
     return ret;
 }
 
+void LinkLayer::CheckLinkStatus(std::function<void(bool)> callback)
+{
+    ctx->TriggerLinkStatusCheck(std::move(callback));
+}
+
 } // namespace opendnp3

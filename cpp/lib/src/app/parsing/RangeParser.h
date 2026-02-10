@@ -79,6 +79,12 @@ private:
                                              Logger* pLogger,
                                              IAPDUHandler* pHandler);
 
+    static ParseResult ParseRangeOfDeviceAttributes(ser4cpp::rseq_t& buffer,
+                                                    const HeaderRecord& record,
+                                                    const Range& range,
+                                                    Logger* pLogger,
+                                                    IAPDUHandler* pHandler);
+
     template<class Descriptor>
     static void InvokeRangeOf(const HeaderRecord& record,
                               const Range& range,

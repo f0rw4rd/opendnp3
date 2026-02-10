@@ -1,8 +1,9 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
- * LLC (https://stepfunc.io) under one or more contributor license agreements. 
+ * LLC (https://stepfunc.io) under one or more contributor license agreements.
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership. Green Energy Corp and Step Function I/O LLC license
  * this file to you under the Apache License, Version 2.0 (the "License"); you
@@ -30,40 +31,69 @@ using namespace System::Collections::ObjectModel;
 
 namespace Automatak
 {
-    namespace DNP3
+namespace DNP3
+{
+    namespace Adapter
     {
-        namespace Adapter
+
+    private
+        class SOEHandlerAdapter : public opendnp3::ISOEHandler
         {
+        public:
+            SOEHandlerAdapter(Automatak::DNP3::Interface::ISOEHandler ^ proxy);
 
-            private class SOEHandlerAdapter : public opendnp3::ISOEHandler
+            virtual void BeginFragment(const opendnp3::ResponseInfo& info) override final;
+            virtual void EndFragment(const opendnp3::ResponseInfo& info) override final;
+
+            virtual void Process(
+                const opendnp3::HeaderInfo& info,
+                const opendnp3::ICollection<opendnp3::Indexed<opendnp3::Binary>>& values) override final;
+            virtual void Process(
+                const opendnp3::HeaderInfo& info,
+                const opendnp3::ICollection<opendnp3::Indexed<opendnp3::DoubleBitBinary>>& values) override final;
+            virtual void Process(
+                const opendnp3::HeaderInfo& info,
+                const opendnp3::ICollection<opendnp3::Indexed<opendnp3::Analog>>& values) override final;
+            virtual void Process(
+                const opendnp3::HeaderInfo& info,
+                const opendnp3::ICollection<opendnp3::Indexed<opendnp3::Counter>>& values) override final;
+            virtual void Process(
+                const opendnp3::HeaderInfo& info,
+                const opendnp3::ICollection<opendnp3::Indexed<opendnp3::FrozenCounter>>& values) override final;
+            virtual void Process(
+                const opendnp3::HeaderInfo& info,
+                const opendnp3::ICollection<opendnp3::Indexed<opendnp3::BinaryOutputStatus>>& values) override final;
+            virtual void Process(
+                const opendnp3::HeaderInfo& info,
+                const opendnp3::ICollection<opendnp3::Indexed<opendnp3::AnalogOutputStatus>>& values) override final;
+            virtual void Process(
+                const opendnp3::HeaderInfo& info,
+                const opendnp3::ICollection<opendnp3::Indexed<opendnp3::OctetString>>& values) override final;
+            virtual void Process(
+                const opendnp3::HeaderInfo& info,
+                const opendnp3::ICollection<opendnp3::Indexed<opendnp3::TimeAndInterval>>& values) override final;
+            virtual void Process(
+                const opendnp3::HeaderInfo& info,
+                const opendnp3::ICollection<opendnp3::Indexed<opendnp3::BinaryCommandEvent>>& values) override final;
+            virtual void Process(
+                const opendnp3::HeaderInfo& info,
+                const opendnp3::ICollection<opendnp3::Indexed<opendnp3::AnalogCommandEvent>>& values) override final;
+            virtual void Process(
+                const opendnp3::HeaderInfo& info,
+                const opendnp3::ICollection<opendnp3::Indexed<opendnp3::AnalogInputDeadband>>& values) override final
             {
-            public:
+            } // not implemented in bindings
+            virtual void Process(const opendnp3::HeaderInfo& info,
+                                 const opendnp3::ICollection<opendnp3::DNPTime>& values) override final
+            {
+            } // not implemented in bindings
 
-                SOEHandlerAdapter(Automatak::DNP3::Interface::ISOEHandler^ proxy);
+        private:
+            gcroot<Automatak::DNP3::Interface::ISOEHandler ^> proxy;
+        };
 
-                virtual void BeginFragment(const opendnp3::ResponseInfo& info) override final;
-                virtual void EndFragment(const opendnp3::ResponseInfo& info) override final;
-
-                virtual void Process(const opendnp3::HeaderInfo& info, const opendnp3::ICollection<opendnp3::Indexed<opendnp3::Binary>>& values) override final;
-                virtual void Process(const opendnp3::HeaderInfo& info, const opendnp3::ICollection<opendnp3::Indexed<opendnp3::DoubleBitBinary>>& values) override final;
-                virtual void Process(const opendnp3::HeaderInfo& info, const opendnp3::ICollection<opendnp3::Indexed<opendnp3::Analog>>& values) override final;
-                virtual void Process(const opendnp3::HeaderInfo& info, const opendnp3::ICollection<opendnp3::Indexed<opendnp3::Counter>>& values) override final;
-                virtual void Process(const opendnp3::HeaderInfo& info, const opendnp3::ICollection<opendnp3::Indexed<opendnp3::FrozenCounter>>& values) override final;
-                virtual void Process(const opendnp3::HeaderInfo& info, const opendnp3::ICollection<opendnp3::Indexed<opendnp3::BinaryOutputStatus>>& values) override final;
-                virtual void Process(const opendnp3::HeaderInfo& info, const opendnp3::ICollection<opendnp3::Indexed<opendnp3::AnalogOutputStatus>>& values) override final;
-                virtual void Process(const opendnp3::HeaderInfo& info, const opendnp3::ICollection<opendnp3::Indexed<opendnp3::OctetString>>& values) override final;
-                virtual void Process(const opendnp3::HeaderInfo& info, const opendnp3::ICollection<opendnp3::Indexed<opendnp3::TimeAndInterval>>& values) override final;
-                virtual void Process(const opendnp3::HeaderInfo& info, const opendnp3::ICollection<opendnp3::Indexed<opendnp3::BinaryCommandEvent>>& values) override final;
-                virtual void Process(const opendnp3::HeaderInfo& info, const opendnp3::ICollection<opendnp3::Indexed<opendnp3::AnalogCommandEvent>>& values) override final;				
-                virtual void Process(const opendnp3::HeaderInfo& info, const opendnp3::ICollection<opendnp3::DNPTime>& values) override final {} // not implemented in bindings
-
-            private:
-
-                gcroot < Automatak::DNP3::Interface::ISOEHandler^ > proxy;
-            };
-
-        }
-    }
-}
+    } // namespace Adapter
+} // namespace DNP3
+} // namespace Automatak
 
 #endif

@@ -14,8 +14,8 @@ https://dnp3.github.io
 Please read the LICENSE file present in the root directory of this
 distribution.
 
-Aside from contributions to the oepdnp3 distribution listed above, this repository
-also distributes the following 3rd party softare:
+Aside from contributions to the opendnp3 distribution listed above, this repository
+also distributes the following 3rd party software:
 
 https://github.com/philsquared/Catch (test only dependency)
 	

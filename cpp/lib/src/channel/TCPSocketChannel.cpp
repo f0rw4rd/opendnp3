@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -27,6 +28,8 @@ TCPSocketChannel::TCPSocketChannel(const std::shared_ptr<exe4cpp::StrandExecutor
                                    asio::ip::tcp::socket socket)
     : IAsyncChannel(executor), socket(std::move(socket))
 {
+    std::error_code ec;
+    this->socket.set_option(asio::ip::tcp::no_delay(true), ec);
 }
 
 void TCPSocketChannel::BeginReadImpl(ser4cpp::wseq_t dest)

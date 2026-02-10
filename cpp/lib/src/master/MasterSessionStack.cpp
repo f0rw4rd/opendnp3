@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -53,13 +54,13 @@ MasterSessionStack::MasterSessionStack(const Logger& logger,
       session(std::move(session)),
       stack(logger, executor, application, config.master.maxRxFragSize, LinkLayerConfig(config.link, false)),
       context(MContext::Create(Addresses(config.link.LocalAddr, config.link.RemoteAddr),
-              logger,
-              executor,
-              stack.transport,
-              SOEHandler,
-              application,
-              scheduler,
-              config.master))
+                               logger,
+                               executor,
+                               stack.transport,
+                               SOEHandler,
+                               application,
+                               scheduler,
+                               config.master))
 {
     stack.link->SetRouter(linktx);
     stack.transport->SetAppLayer(*context);
@@ -231,6 +232,104 @@ void MasterSessionStack::PerformFunction(const std::string& name,
     auto action = [self = shared_from_this(), name, func, builder, config]() -> void {
         self->context->PerformFunction(name, func, builder, config);
     };
+    return executor->post(action);
+}
+
+void MasterSessionStack::Freeze(FreezeType type, const std::vector<Header>& headers, const TaskConfig& config)
+{
+    auto builder = ConvertToLambda(headers);
+    auto action = [self = shared_from_this(), type, builder, config]() -> void {
+        self->context->Freeze(type, builder, config);
+    };
+    return executor->post(action);
+}
+
+void MasterSessionStack::ReadFile(const std::string& filename,
+                                  const FileReadCallbackT& callback,
+                                  const TaskConfig& config)
+{
+    auto action = [self = shared_from_this(), filename, callback, config]() -> void {
+        self->context->ReadFile(filename, callback, config);
+    };
+    return executor->post(action);
+}
+
+void MasterSessionStack::GetFileInfo(const std::string& filename,
+                                     const FileInfoCallbackT& callback,
+                                     const TaskConfig& config)
+{
+    auto action = [self = shared_from_this(), filename, callback, config]() -> void {
+        self->context->GetFileInfo(filename, callback, config);
+    };
+    return executor->post(action);
+}
+
+void MasterSessionStack::DeleteFile(const std::string& filename,
+                                    const FileOperationCallbackT& callback,
+                                    const TaskConfig& config)
+{
+    auto action = [self = shared_from_this(), filename, callback, config]() -> void {
+        self->context->DeleteFile(filename, callback, config);
+    };
+    return executor->post(action);
+}
+
+void MasterSessionStack::WriteFile(const std::string& filename,
+                                   const std::vector<uint8_t>& data,
+                                   FilePermissions permissions,
+                                   const FileWriteCallbackT& callback,
+                                   const TaskConfig& config)
+{
+    auto action = [self = shared_from_this(), filename, data, permissions, callback, config]() -> void {
+        self->context->WriteFile(filename, data, permissions, callback, config);
+    };
+    return executor->post(action);
+}
+
+void MasterSessionStack::ReadDirectory(const std::string& directoryPath,
+                                       const DirectoryReadCallbackT& callback,
+                                       const TaskConfig& config)
+{
+    auto action = [self = shared_from_this(), directoryPath, callback, config]() -> void {
+        self->context->ReadDirectory(directoryPath, callback, config);
+    };
+    return executor->post(action);
+}
+
+void MasterSessionStack::AbortFile(uint32_t fileHandle,
+                                   const FileOperationCallbackT& callback,
+                                   const TaskConfig& config)
+{
+    auto action = [self = shared_from_this(), fileHandle, callback, config]() -> void {
+        self->context->AbortFile(fileHandle, callback, config);
+    };
+    return executor->post(action);
+}
+
+void MasterSessionStack::AuthenticateFile(const std::string& username,
+                                          const std::string& password,
+                                          const FileAuthCallbackT& callback,
+                                          const TaskConfig& config)
+{
+    auto action = [self = shared_from_this(), username, password, callback, config]() -> void {
+        self->context->AuthenticateFile(username, password, callback, config);
+    };
+    return executor->post(action);
+}
+
+void MasterSessionStack::WriteDeadBands(const std::vector<Indexed<AnalogInputDeadband>>& deadBands,
+                                        const FileOperationCallbackT& callback,
+                                        const TaskConfig& config)
+{
+    auto action = [self = shared_from_this(), deadBands, callback, config]() -> void {
+        self->context->WriteDeadBands(deadBands, callback, config);
+    };
+    return executor->post(action);
+}
+
+void MasterSessionStack::CheckLinkStatus(const std::function<void(bool)>& callback)
+{
+    auto action = [self = shared_from_this(), callback]() -> void { self->stack.link->CheckLinkStatus(callback); };
     return executor->post(action);
 }
 

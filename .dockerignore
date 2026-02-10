@@ -1,0 +1,15 @@
+.git
+build
+build-*
+cmake-build-*
+.cache
+.vs
+.vscode
+.idea
+*.whl
+dist
+.venv
+.claude
+CLAUDE.md
+tasks
+pcap_extract

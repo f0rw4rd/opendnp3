@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -25,6 +26,8 @@
 #include "opendnp3/gen/QualifierCode.h"
 
 #include <cstdint>
+#include <memory>
+#include <vector>
 
 namespace opendnp3
 {
@@ -40,7 +43,8 @@ enum class HeaderType : uint8_t
     Ranged8,
     Ranged16,
     LimitedCount8,
-    LimitedCount16
+    LimitedCount16,
+    Raw
 };
 
 /**
@@ -109,12 +113,18 @@ public:
      */
     static Header Count16(uint8_t group, uint8_t variation, uint16_t count);
 
+    /**
+     * Create a header with raw bytes (group/var/qualifier + object data)
+     */
+    static Header Raw(const uint8_t* data, size_t length);
+
     Header() = default;
 
 private:
     GroupVariationID id;
     HeaderType type = HeaderType::AllObjects;
     HeaderUnion value;
+    std::shared_ptr<std::vector<uint8_t>> rawData;
 
     Header(uint8_t group, uint8_t var);
 

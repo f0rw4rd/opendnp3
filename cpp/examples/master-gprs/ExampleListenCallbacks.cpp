@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -40,7 +41,7 @@ class ExampleSOEHandler : public ISOEHandler
 public:
     explicit ExampleSOEHandler(const uint16_t address) : address(address) {}
 
-	void BeginFragment(const ResponseInfo& info) override
+    void BeginFragment(const ResponseInfo& info) override
     {
         std::cout << "Begin receiving measurement data for outstation: " << address << std::endl;
     }
@@ -50,65 +51,34 @@ public:
         std::cout << "End receiving measurement data for outstation: " << address << std::endl;
     }
 
-    void Process(const HeaderInfo& info,
-                 const ICollection<Indexed<Binary>>& values) override
-    {
-    }
+    void Process(const HeaderInfo& info, const ICollection<Indexed<Binary>>& values) override {}
 
-    void Process(const HeaderInfo& info,
-                 const ICollection<Indexed<DoubleBitBinary>>& values) override
-    {
-    }
+    void Process(const HeaderInfo& info, const ICollection<Indexed<DoubleBitBinary>>& values) override {}
 
-    void Process(const HeaderInfo& info,
-                 const ICollection<Indexed<Analog>>& values) override
-    {
-    }
+    void Process(const HeaderInfo& info, const ICollection<Indexed<Analog>>& values) override {}
 
-    void Process(const HeaderInfo& info,
-                 const ICollection<Indexed<Counter>>& values) override
-    {
-    }
+    void Process(const HeaderInfo& info, const ICollection<Indexed<Counter>>& values) override {}
 
-    void Process(const HeaderInfo& info,
-                 const ICollection<Indexed<FrozenCounter>>& values) override
-    {
-    }
+    void Process(const HeaderInfo& info, const ICollection<Indexed<FrozenCounter>>& values) override {}
 
-    void Process(const HeaderInfo& info,
-                 const ICollection<Indexed<BinaryOutputStatus>>& values) override
-    {
-    }
+    void Process(const HeaderInfo& info, const ICollection<Indexed<BinaryOutputStatus>>& values) override {}
 
-    void Process(const HeaderInfo& info,
-                 const ICollection<Indexed<AnalogOutputStatus>>& values) override
-    {
-    }
+    void Process(const HeaderInfo& info, const ICollection<Indexed<AnalogOutputStatus>>& values) override {}
 
-    void Process(const HeaderInfo& info,
-                 const ICollection<Indexed<OctetString>>& values) override
-    {
-    }
+    void Process(const HeaderInfo& info, const ICollection<Indexed<OctetString>>& values) override {}
 
-    void Process(const HeaderInfo& info,
-                 const ICollection<Indexed<TimeAndInterval>>& values) override
-    {
-    }
+    void Process(const HeaderInfo& info, const ICollection<Indexed<TimeAndInterval>>& values) override {}
 
-    void Process(const HeaderInfo& info,
-                 const ICollection<Indexed<BinaryCommandEvent>>& values) override
-    {
-    }
+    void Process(const HeaderInfo& info, const ICollection<Indexed<BinaryCommandEvent>>& values) override {}
 
-    void Process(const HeaderInfo& info,
-                 const ICollection<Indexed<AnalogCommandEvent>>& values) override
-    {
-    }    
+    void Process(const HeaderInfo& info, const ICollection<Indexed<AnalogCommandEvent>>& values) override {}
+
+    void Process(const HeaderInfo& info, const ICollection<Indexed<AnalogInputDeadband>>& values) override {}
 
     void Process(const HeaderInfo& info, const ICollection<DNPTime>& values) override {}
 
 protected:
-    const uint16_t address;    
+    const uint16_t address;
 };
 
 std::shared_ptr<IMasterSession> ExampleListenCallbacks::get_outstation_session(uint16_t address)
@@ -149,8 +119,8 @@ void ExampleListenCallbacks::OnFirstFrame(uint64_t sessionid,
     if (iter != this->sessions.end())
     {
 
-        std::cout << "Already connected to outstation w/ address " << header.addresses.source << ". Closing first connection."
-                  << std::endl;
+        std::cout << "Already connected to outstation w/ address " << header.addresses.source
+                  << ". Closing first connection." << std::endl;
 
         // if so, shutdown the existing session
         iter->session->BeginShutdown();
@@ -168,9 +138,9 @@ void ExampleListenCallbacks::OnFirstFrame(uint64_t sessionid,
     // don't perform an integrity scan when the application layer comes online
     config.master.startupIntegrityClassMask = ClassField::None();
 
-    const auto session
-        = acceptor.AcceptSession(GetSessionName(header.addresses.source, sessionid), std::make_shared<ExampleSOEHandler>(header.addresses.source),
-                                 std::make_shared<DefaultMasterApplication>(), config);
+    const auto session = acceptor.AcceptSession(GetSessionName(header.addresses.source, sessionid),
+                                                std::make_shared<ExampleSOEHandler>(header.addresses.source),
+                                                std::make_shared<DefaultMasterApplication>(), config);
 
     // add to the list
     this->sessions.emplace_back(SessionInfo{sessionid, header.addresses.source, session});
@@ -178,8 +148,7 @@ void ExampleListenCallbacks::OnFirstFrame(uint64_t sessionid,
     std::cout << "Outstation session start: " << header.addresses.source << std::endl;
 }
 
-void ExampleListenCallbacks::OnConnectionClose(uint64_t sessionid,
-                                               const std::shared_ptr<IMasterSession>& session)
+void ExampleListenCallbacks::OnConnectionClose(uint64_t sessionid, const std::shared_ptr<IMasterSession>& session)
 {
     std::lock_guard<std::mutex> lock(this->mutex);
     const auto iter = std::find_if(this->sessions.begin(), this->sessions.end(),

@@ -1,0 +1,372 @@
+name: Build and Release opendnp3 Python Wheel
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      publish_pypi:
+        description: 'Publish to PyPI'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  build-linux:
+    name: Build Linux wheel (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get package version
+        id: get_version
+        run: |
+          PACKAGE_VERSION=$(python3 version.py)
+          echo "package_version=${PACKAGE_VERSION}" >> $GITHUB_OUTPUT
+          echo "Building package version ${PACKAGE_VERSION}"
+
+      - name: Build wheel in Docker
+        run: |
+          docker build \
+            -f Dockerfile \
+            --build-arg PYTHON_VERSION=${{ matrix.python-version }} \
+            --build-arg PACKAGE_VERSION=${{ steps.get_version.outputs.package_version }} \
+            -t opendnp3-build:py${{ matrix.python-version }} .
+
+      - name: Extract and verify wheel
+        run: |
+          mkdir -p ./dist
+          docker create --name whl-extract opendnp3-build:py${{ matrix.python-version }}
+          docker cp whl-extract:/wheels/. ./dist/
+          docker rm whl-extract
+
+          # Verify checksums
+          cd ./dist && sha256sum -c SHA256SUMS && rm SHA256SUMS
+          ls -la
+
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-linux-py${{ matrix.python-version }}
+          path: ./dist/*.whl
+
+  test-linux:
+    name: Test Linux wheel (Python ${{ matrix.python-version }})
+    needs: [build-linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Download wheel
+        uses: actions/download-artifact@v4
+        with:
+          name: wheel-linux-py${{ matrix.python-version }}
+          path: ./dist
+
+      - name: Install and test
+        run: |
+          pip install ./dist/*.whl pytest
+          # Run import test from /tmp to avoid source tree shadowing
+          cd /tmp
+          python -c "import opendnp3; print('opendnp3 import OK')"
+          python -c "import opendnp3; print(f'DNP3Manager: {opendnp3.DNP3Manager}')"
+          python -c "import opendnp3; m = opendnp3.DNP3Manager(1); m.Shutdown(); print('Manager lifecycle OK')"
+          python -c "
+          import opendnp3
+          # Verify key types are available
+          for name in ['DNP3Manager', 'IChannel', 'IMaster', 'IOutstation',
+                       'MasterStackConfig', 'OutstationStackConfig',
+                       'Binary', 'Analog', 'Counter']:
+              assert hasattr(opendnp3, name), f'Missing: {name}'
+          print('All key types present')
+          "
+
+  build-windows:
+    name: Build Windows wheel (Python ${{ matrix.python-version }})
+    runs-on: windows-2022
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install OpenSSL
+        run: choco install --no-progress openssl
+
+      - name: Configure CMake
+        run: |
+          mkdir cmake-build
+          cd cmake-build
+
+          cmake .. `
+            -DDNP3_PYTHON=ON `
+            -DDNP3_STATIC_LIBS=ON `
+            -DDNP3_TLS=ON `
+            -DDNP3_TESTS=OFF `
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: |
+          cd cmake-build
+          cmake --build . --config Release --parallel 4
+
+      - name: Test import from build tree
+        run: |
+          $ext = Get-ChildItem -Path cmake-build/python -Recurse -Filter "_opendnp3*.pyd" | Select-Object -First 1
+          if (-not $ext) {
+            $ext = Get-ChildItem -Path cmake-build/python -Recurse -Filter "opendnp3*.so" | Select-Object -First 1
+          }
+          Write-Host "Extension found: $($ext.FullName)"
+
+          # Also find any DLLs we may need
+          Get-ChildItem -Path cmake-build -Recurse -Filter "*.pyd" |
+            ForEach-Object { Write-Host "PYD: $($_.FullName)" }
+
+      - name: Package wheel
+        run: |
+          $staging = "wheel-staging"
+          $pkgdir = "$staging/opendnp3"
+
+          New-Item -ItemType Directory -Force -Path $pkgdir | Out-Null
+
+          # Find and copy the pybind11 extension
+          $ext = Get-ChildItem -Path cmake-build/python -Recurse -Filter "_opendnp3*.pyd" | Select-Object -First 1
+          if (-not $ext) {
+            # In some configurations it may be .dll
+            $ext = Get-ChildItem -Path cmake-build/python -Recurse -Filter "_opendnp3*.dll" | Select-Object -First 1
+          }
+          if ($ext) {
+            Copy-Item $ext.FullName -Destination $pkgdir/
+            Write-Host "Copied extension: $($ext.Name)"
+          } else {
+            Write-Error "No pybind11 extension found!"
+            exit 1
+          }
+
+          # Copy __init__.py
+          Copy-Item opendnp3/__init__.py -Destination $pkgdir/
+
+          # Copy project metadata
+          Copy-Item LICENSE -Destination $staging/
+          Copy-Item NOTICE -Destination $staging/
+          Copy-Item README.md -Destination $staging/
+          Copy-Item setup_wheel.py -Destination "$staging/setup.py"
+
+          # Build wheel
+          $version = python version.py
+          Write-Host "Building wheel version: $version"
+          pip install setuptools wheel
+          Push-Location $staging
+          $env:PACKAGE_VERSION = $version
+          python setup.py bdist_wheel
+          Pop-Location
+
+          # Show result
+          Write-Host "=== Built wheel ==="
+          Get-ChildItem "$staging/dist/*.whl" | ForEach-Object {
+            Write-Host "$($_.Length)`t$($_.Name)"
+            python -c "import zipfile,sys;[print(f'  {f.filename}') for f in zipfile.ZipFile(sys.argv[1]).filelist]" $_.FullName
+          }
+
+      - name: Test wheel install
+        run: |
+          python -m venv test-venv
+          $wheel = (Get-ChildItem "wheel-staging/dist/*.whl")[0]
+          Write-Host "Installing: $($wheel.Name)"
+
+          & test-venv/Scripts/pip.exe install $wheel.FullName
+
+          # Run import test from temp directory to avoid source tree shadowing
+          $venvPython = (Resolve-Path "test-venv/Scripts/python.exe").Path
+          Push-Location $env:TEMP
+          & $venvPython -c @'
+          import opendnp3
+          print(f'DNP3Manager: {opendnp3.DNP3Manager}')
+          m = opendnp3.DNP3Manager(1)
+          m.Shutdown()
+          print('Manager lifecycle OK')
+          for name in ['DNP3Manager', 'IChannel', 'IMaster', 'IOutstation',
+                       'MasterStackConfig', 'OutstationStackConfig',
+                       'Binary', 'Analog', 'Counter']:
+              assert hasattr(opendnp3, name), f'Missing: {name}'
+          print('All key types present')
+          '@
+          Pop-Location
+
+      - name: Upload wheel
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-windows-py${{ matrix.python-version }}
+          path: wheel-staging/dist/*.whl
+
+  test-windows:
+    name: Test Windows wheel (Python ${{ matrix.python-version }})
+    needs: [build-windows]
+    runs-on: windows-2022
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Download wheel
+        uses: actions/download-artifact@v4
+        with:
+          name: wheel-windows-py${{ matrix.python-version }}
+          path: ./dist
+
+      - name: Install and test
+        run: |
+          python -m venv test-venv
+          $wheel = (Get-ChildItem "dist/*.whl")[0]
+          Write-Host "Installing: $($wheel.Name)"
+
+          & test-venv/Scripts/pip.exe install $wheel.FullName
+
+          $venvPython = (Resolve-Path "test-venv/Scripts/python.exe").Path
+          Push-Location $env:TEMP
+          & $venvPython -c @'
+          import opendnp3
+          print(f'DNP3Manager: {opendnp3.DNP3Manager}')
+          m = opendnp3.DNP3Manager(1)
+          m.Shutdown()
+          print('Manager lifecycle OK')
+          for name in ['DNP3Manager', 'IChannel', 'IMaster', 'IOutstation',
+                       'MasterStackConfig', 'OutstationStackConfig',
+                       'Binary', 'Analog', 'Counter']:
+              assert hasattr(opendnp3, name), f'Missing: {name}'
+          print('SUCCESS: All tests passed')
+          '@
+          Pop-Location
+
+  create-release:
+    name: Create GitHub Release
+    needs: [build-linux, test-linux, build-windows, test-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    if: github.event_name == 'push' && github.ref_type == 'tag'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get package version
+        id: get_version
+        run: |
+          PACKAGE_VERSION=$(python3 version.py)
+          echo "package_version=${PACKAGE_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Download all wheels
+        uses: actions/download-artifact@v4
+        with:
+          pattern: wheel-*
+          path: dist
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACKAGE_VERSION: ${{ steps.get_version.outputs.package_version }}
+        run: |
+          ls -la dist/
+          gh release create "${{ github.ref_name }}" dist/*.whl \
+            --title "opendnp3 v${PACKAGE_VERSION}" \
+            --notes "$(cat <<EOF
+          ## opendnp3 v${PACKAGE_VERSION}
+
+          Python bindings for [opendnp3](https://github.com/f0rw4rd/opendnp3) -- IEEE-1815 (DNP3) protocol implementation.
+
+          ### Supported Platforms
+          - Linux x86_64 (per-version wheels, Python 3.9-3.13)
+          - Windows x86_64 (per-version wheels, Python 3.9-3.13)
+
+          ### Installation
+
+          From GitHub Release:
+          \`\`\`bash
+          pip install opendnp3 --find-links https://github.com/f0rw4rd/opendnp3/releases/download/${{ github.ref_name }}/
+          \`\`\`
+          EOF
+          )"
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: [build-linux, test-linux, build-windows, test-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: |
+      (github.event_name == 'push' && github.ref_type == 'tag') ||
+      (github.event.inputs.publish_pypi == 'true')
+
+    steps:
+      - name: Download all wheels
+        uses: actions/download-artifact@v4
+        with:
+          pattern: wheel-*
+          path: dist
+          merge-multiple: true
+
+      - name: Fix platform tag for PyPI
+        run: |
+          pip install wheel
+          # Rename linux_x86_64 to manylinux for PyPI compatibility
+          for whl in dist/*linux_x86_64.whl; do
+            [ -f "$whl" ] || continue
+            new=$(echo "$whl" | sed 's/linux_x86_64/manylinux2014_x86_64/')
+            mv "$whl" "$new"
+            echo "Renamed: $(basename "$whl") -> $(basename "$new")"
+          done
+          ls -la dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages-dir: dist/
+          skip-existing: true

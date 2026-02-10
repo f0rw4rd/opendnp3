@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -37,6 +38,10 @@
 
 #include "opendnp3/logging/LogLevels.h"
 
+#include <ser4cpp/serialization/LittleEndian.h>
+
+#include <algorithm>
+#include <cstring>
 #include <utility>
 
 namespace opendnp3
@@ -49,7 +54,8 @@ OContext::OContext(const Addresses& addresses,
                    const std::shared_ptr<exe4cpp::IExecutor>& executor,
                    std::shared_ptr<ILowerLayer> lower,
                    std::shared_ptr<ICommandHandler> commandHandler,
-                   std::shared_ptr<IOutstationApplication> application)
+                   std::shared_ptr<IOutstationApplication> application,
+                   std::shared_ptr<IFileHandler> fileHandler)
     :
 
       addresses(addresses),
@@ -58,6 +64,7 @@ OContext::OContext(const Addresses& addresses,
       lower(std::move(lower)),
       commandHandler(std::move(commandHandler)),
       application(std::move(application)),
+      fileHandler(std::move(fileHandler)),
       eventBuffer(config.eventBufferConfig),
       database(db_config, eventBuffer, *this->application, config.params.typesAllowedInClass0),
       rspContext(database, eventBuffer),
@@ -571,8 +578,7 @@ bool OContext::ProcessBroadcastRequest(const ParsedRequest& request)
     case (FunctionCode::FREEZE_CLEAR_NR):
         this->HandleFreezeAndClear(request.objects);
         return true;
-    case (FunctionCode::ASSIGN_CLASS):
-    {
+    case (FunctionCode::ASSIGN_CLASS): {
         if (this->application->SupportsAssignClass())
         {
             this->HandleAssignClass(request.objects);
@@ -583,8 +589,7 @@ bool OContext::ProcessBroadcastRequest(const ParsedRequest& request)
             return false;
         }
     }
-    case (FunctionCode::RECORD_CURRENT_TIME):
-    {
+    case (FunctionCode::RECORD_CURRENT_TIME): {
         if (request.objects.is_not_empty())
         {
             this->HandleRecordCurrentTime();
@@ -595,8 +600,7 @@ bool OContext::ProcessBroadcastRequest(const ParsedRequest& request)
             return false;
         }
     }
-    case (FunctionCode::DISABLE_UNSOLICITED):
-    {
+    case (FunctionCode::DISABLE_UNSOLICITED): {
         if (this->params.allowUnsolicited)
         {
             this->HandleDisableUnsolicited(request.objects, nullptr);
@@ -607,8 +611,7 @@ bool OContext::ProcessBroadcastRequest(const ParsedRequest& request)
             return false;
         }
     }
-    case (FunctionCode::ENABLE_UNSOLICITED):
-    {
+    case (FunctionCode::ENABLE_UNSOLICITED): {
         if (this->params.allowUnsolicited)
         {
             this->HandleEnableUnsolicited(request.objects, nullptr);
@@ -652,6 +655,8 @@ IINField OContext::HandleNonReadResponse(const APDUHeader& header, const ser4cpp
     switch (header.function)
     {
     case (FunctionCode::WRITE):
+        if (this->IsFileWriteRequest(objects))
+            return this->HandleFileWrite(objects, writer);
         return this->HandleWrite(objects);
     case (FunctionCode::SELECT):
         return this->HandleSelect(objects, writer);
@@ -679,6 +684,18 @@ IINField OContext::HandleNonReadResponse(const APDUHeader& header, const ser4cpp
         return this->HandleFreeze(objects);
     case (FunctionCode::FREEZE_CLEAR):
         return this->HandleFreezeAndClear(objects);
+    case (FunctionCode::OPEN_FILE):
+        return this->HandleOpenFile(objects, writer);
+    case (FunctionCode::CLOSE_FILE):
+        return this->HandleCloseFile(objects, writer);
+    case (FunctionCode::DELETE_FILE):
+        return this->HandleDeleteFile(objects, writer);
+    case (FunctionCode::GET_FILE_INFO):
+        return this->HandleGetFileInfo(objects, writer);
+    case (FunctionCode::AUTHENTICATE_FILE):
+        return this->HandleAuthenticateFile(objects, writer);
+    case (FunctionCode::ABORT_FILE):
+        return this->HandleAbortFile(objects, writer);
     default:
         return IINField(IINBit::FUNC_NOT_SUPPORTED);
     }
@@ -686,6 +703,13 @@ IINField OContext::HandleNonReadResponse(const APDUHeader& header, const ser4cpp
 
 ser4cpp::Pair<IINField, AppControlField> OContext::HandleRead(const ser4cpp::rseq_t& objects, HeaderWriter& writer)
 {
+    // Check if this is a file block read (Group70Var5)
+    if (this->IsFileReadRequest(objects))
+    {
+        auto iin = this->HandleFileRead(objects, writer);
+        return ser4cpp::Pair<IINField, AppControlField>(iin, AppControlField(true, true, false, false));
+    }
+
     this->rspContext.Reset();
     this->eventBuffer.Unselect(); // always un-select any previously selected points when we start a new read request
     this->database.Unselect();
@@ -816,8 +840,7 @@ IINField OContext::HandleRestart(const ser4cpp::rseq_t& objects, bool isWarmRest
     {
     case (RestartMode::UNSUPPORTED):
         return IINField(IINBit::FUNC_NOT_SUPPORTED);
-    case (RestartMode::SUPPORTED_DELAY_COARSE):
-    {
+    case (RestartMode::SUPPORTED_DELAY_COARSE): {
         auto delay = isWarmRestart ? this->application->WarmRestart() : this->application->ColdRestart();
         if (pWriter)
         {
@@ -827,8 +850,7 @@ IINField OContext::HandleRestart(const ser4cpp::rseq_t& objects, bool isWarmRest
         }
         return IINField::Empty();
     }
-    default:
-    {
+    default: {
         auto delay = isWarmRestart ? this->application->WarmRestart() : this->application->ColdRestart();
         if (pWriter)
         {
@@ -900,6 +922,660 @@ IINField OContext::HandleFreezeAndClear(const ser4cpp::rseq_t& objects)
     FreezeRequestHandler handler(true, database);
     auto result = APDUParser::Parse(objects, handler, &this->logger, ParserSettings::NoContents());
     return IINFromParseResult(result);
+}
+
+//// ----------------------------- file transfer handlers -----------------------------
+
+bool OContext::IsFileReadRequest(const ser4cpp::rseq_t& objects)
+{
+    // A file block read has Group70 in the object headers
+    // Peek at the first 2 bytes: group=70
+    if (objects.length() >= 3 && objects[0] == 70)
+    {
+        return true;
+    }
+    return false;
+}
+
+IINField OContext::HandleFileRead(const ser4cpp::rseq_t& objects, HeaderWriter& writer)
+{
+    if (!this->fileHandler)
+    {
+        return IINField(IINBit::FUNC_NOT_SUPPORTED);
+    }
+
+    // Parse Group70Var5: header(3) + count(1) + length(2) + data(8+)
+    auto data = objects;
+
+    if (data.length() < 3)
+        return IINField(IINBit::PARAM_ERROR);
+
+    uint8_t group = data[0];
+    uint8_t var = data[1];
+    uint8_t qc = data[2];
+    data.advance(3);
+
+    if (group != 70 || var != 5 || qc != 0x5B)
+        return IINField(IINBit::PARAM_ERROR);
+
+    if (data.length() < 1)
+        return IINField(IINBit::PARAM_ERROR);
+    uint8_t count = data[0];
+    data.advance(1);
+
+    if (count < 1)
+        return IINField(IINBit::PARAM_ERROR);
+
+    if (data.length() < 2)
+        return IINField(IINBit::PARAM_ERROR);
+    uint16_t dataLen = 0;
+    ser4cpp::LittleEndian::read(data, dataLen);
+
+    if (data.length() < dataLen || dataLen < 8)
+        return IINField(IINBit::PARAM_ERROR);
+
+    uint32_t fileHandle = 0;
+    uint32_t blockNum = 0;
+    ser4cpp::LittleEndian::read(data, fileHandle);
+    ser4cpp::LittleEndian::read(data, blockNum);
+
+    auto result = this->fileHandler->ReadBlock(fileHandle, blockNum);
+
+    if (result.status != FileStatus::SUCCESS)
+    {
+        this->WriteGroup70Var6Response(writer, fileHandle, blockNum, result.status);
+        return IINField::Empty();
+    }
+
+    this->WriteGroup70Var5Response(writer, fileHandle, blockNum, result.lastBlock, result.data.data(),
+                                   result.data.size());
+    return IINField::Empty();
+}
+
+IINField OContext::HandleOpenFile(const ser4cpp::rseq_t& objects, HeaderWriter& writer)
+{
+    if (!this->fileHandler)
+    {
+        return IINField(IINBit::FUNC_NOT_SUPPORTED);
+    }
+
+    // Parse Group70Var3 from objects
+    auto data = objects;
+
+    if (data.length() < 3)
+        return IINField(IINBit::PARAM_ERROR);
+
+    uint8_t group = data[0];
+    uint8_t var = data[1];
+    uint8_t qc = data[2];
+    data.advance(3);
+
+    if (group != 70 || var != 3 || qc != 0x5B)
+        return IINField(IINBit::PARAM_ERROR);
+
+    if (data.length() < 1)
+        return IINField(IINBit::PARAM_ERROR);
+    data.advance(1); // count
+
+    if (data.length() < 2)
+        return IINField(IINBit::PARAM_ERROR);
+    uint16_t dataLen = 0;
+    ser4cpp::LittleEndian::read(data, dataLen);
+
+    if (data.length() < dataLen || dataLen < 26)
+        return IINField(IINBit::PARAM_ERROR);
+
+    uint16_t fileNameOffset = 0;
+    uint16_t fileNameLength = 0;
+    ser4cpp::LittleEndian::read(data, fileNameOffset);
+    ser4cpp::LittleEndian::read(data, fileNameLength);
+
+    // time_of_creation: 6 bytes
+    data.advance(6);
+
+    uint16_t permissions = 0;
+    uint32_t authKey = 0;
+    uint32_t fileSize = 0;
+    uint16_t mode = 0;
+    uint16_t maxBlockSize = 0;
+    uint16_t requestId = 0;
+
+    ser4cpp::LittleEndian::read(data, permissions);
+    ser4cpp::LittleEndian::read(data, authKey);
+    ser4cpp::LittleEndian::read(data, fileSize);
+    ser4cpp::LittleEndian::read(data, mode);
+    ser4cpp::LittleEndian::read(data, maxBlockSize);
+    ser4cpp::LittleEndian::read(data, requestId);
+
+    // Extract filename
+    std::string filename;
+    const auto nameLen = std::min(static_cast<size_t>(fileNameLength), data.length());
+    if (nameLen > 0)
+    {
+        filename.assign(reinterpret_cast<const char*>(static_cast<const uint8_t*>(data)), nameLen);
+    }
+
+    // Cap the requested block size so that a Group70Var5 response fits in
+    // the outstation's maximum TX fragment.  Overhead: 4 (APDU header + IIN)
+    // + 3 (group/var/QC) + 1 (count) + 2 (length prefix) + 8 (handle + block) = 18 bytes.
+    const uint16_t maxDataInApdu
+        = static_cast<uint16_t>(this->params.maxTxFragSize > 18 ? this->params.maxTxFragSize - 18 : 1);
+    if (maxBlockSize > maxDataInApdu)
+    {
+        maxBlockSize = maxDataInApdu;
+    }
+
+    auto result = this->fileHandler->OpenFile(filename, authKey, FilePermissions::FromRaw(permissions),
+                                              static_cast<FileMode>(mode), maxBlockSize, requestId);
+
+    // Ensure the reported max block size also fits
+    uint16_t reportedBlockSize = result.maxBlockSize;
+    if (reportedBlockSize > maxDataInApdu)
+    {
+        reportedBlockSize = maxDataInApdu;
+    }
+
+    this->WriteGroup70Var4Response(writer, result.fileHandle, result.fileSize, reportedBlockSize, requestId,
+                                   result.status);
+    return IINField::Empty();
+}
+
+IINField OContext::HandleCloseFile(const ser4cpp::rseq_t& objects, HeaderWriter& writer)
+{
+    if (!this->fileHandler)
+    {
+        return IINField(IINBit::FUNC_NOT_SUPPORTED);
+    }
+
+    // Parse Group70Var4 from objects
+    auto data = objects;
+
+    if (data.length() < 3)
+        return IINField(IINBit::PARAM_ERROR);
+
+    uint8_t group = data[0];
+    uint8_t var = data[1];
+    uint8_t qc = data[2];
+    data.advance(3);
+
+    if (group != 70 || var != 4 || qc != 0x5B)
+        return IINField(IINBit::PARAM_ERROR);
+
+    if (data.length() < 1)
+        return IINField(IINBit::PARAM_ERROR);
+    data.advance(1); // count
+
+    if (data.length() < 2)
+        return IINField(IINBit::PARAM_ERROR);
+    uint16_t dataLen = 0;
+    ser4cpp::LittleEndian::read(data, dataLen);
+
+    if (data.length() < dataLen || dataLen < 13)
+        return IINField(IINBit::PARAM_ERROR);
+
+    uint32_t fileHandle = 0;
+    uint32_t fSize = 0;
+    uint16_t maxBlockSize = 0;
+    uint16_t requestId = 0;
+
+    ser4cpp::LittleEndian::read(data, fileHandle);
+    ser4cpp::LittleEndian::read(data, fSize);
+    ser4cpp::LittleEndian::read(data, maxBlockSize);
+    ser4cpp::LittleEndian::read(data, requestId);
+    // status byte
+    data.advance(1);
+
+    auto status = this->fileHandler->CloseFile(fileHandle, requestId);
+
+    this->WriteGroup70Var4Response(writer, fileHandle, 0, 0, requestId, status);
+    return IINField::Empty();
+}
+
+IINField OContext::HandleDeleteFile(const ser4cpp::rseq_t& objects, HeaderWriter& writer)
+{
+    if (!this->fileHandler)
+    {
+        return IINField(IINBit::FUNC_NOT_SUPPORTED);
+    }
+
+    // Parse Group70Var8 (file specification string)
+    auto data = objects;
+
+    if (data.length() < 3)
+        return IINField(IINBit::PARAM_ERROR);
+
+    uint8_t group = data[0];
+    uint8_t var = data[1];
+    uint8_t qc = data[2];
+    data.advance(3);
+
+    if (group != 70 || (var != 8 && var != 3) || qc != 0x5B)
+        return IINField(IINBit::PARAM_ERROR);
+
+    if (data.length() < 1)
+        return IINField(IINBit::PARAM_ERROR);
+    data.advance(1); // count
+
+    if (data.length() < 2)
+        return IINField(IINBit::PARAM_ERROR);
+    uint16_t dataLen = 0;
+    ser4cpp::LittleEndian::read(data, dataLen);
+
+    if (data.length() < dataLen)
+        return IINField(IINBit::PARAM_ERROR);
+
+    std::string filename;
+    if (var == 8)
+    {
+        // Group70Var8: entire data is the filename
+        filename.assign(reinterpret_cast<const char*>(static_cast<const uint8_t*>(data)), dataLen);
+    }
+    else
+    {
+        // Group70Var3: parse filename from offset/length fields
+        if (dataLen < 26)
+            return IINField(IINBit::PARAM_ERROR);
+
+        uint16_t fileNameOffset = 0;
+        uint16_t fileNameLength = 0;
+        ser4cpp::LittleEndian::read(data, fileNameOffset);
+        ser4cpp::LittleEndian::read(data, fileNameLength);
+        data.advance(dataLen - 4); // skip rest of fixed fields
+        // filename is at the end after fixed fields
+        // Recalculate: go back to beginning of this object's data
+        // Actually, the data pointer already advanced past the 2-byte length prefix
+        // So let's re-parse from the object start
+        auto objData = objects;
+        objData.advance(3 + 1 + 2); // header + count + length
+        objData.advance(fileNameOffset);
+        const auto nameLen = std::min(static_cast<size_t>(fileNameLength), objData.length());
+        filename.assign(reinterpret_cast<const char*>(static_cast<const uint8_t*>(objData)), nameLen);
+    }
+
+    auto status = this->fileHandler->DeleteFile(filename);
+
+    this->WriteGroup70Var4Response(writer, 0, 0, 0, 0, status);
+    return IINField::Empty();
+}
+
+IINField OContext::HandleGetFileInfo(const ser4cpp::rseq_t& objects, HeaderWriter& writer)
+{
+    if (!this->fileHandler)
+    {
+        return IINField(IINBit::FUNC_NOT_SUPPORTED);
+    }
+
+    // Parse Group70Var8 (file specification string)
+    auto data = objects;
+
+    if (data.length() < 3)
+        return IINField(IINBit::PARAM_ERROR);
+
+    uint8_t group = data[0];
+    uint8_t var = data[1];
+    uint8_t qc = data[2];
+    data.advance(3);
+
+    if (group != 70 || var != 8 || qc != 0x5B)
+        return IINField(IINBit::PARAM_ERROR);
+
+    if (data.length() < 1)
+        return IINField(IINBit::PARAM_ERROR);
+    data.advance(1); // count
+
+    if (data.length() < 2)
+        return IINField(IINBit::PARAM_ERROR);
+    uint16_t dataLen = 0;
+    ser4cpp::LittleEndian::read(data, dataLen);
+
+    if (data.length() < dataLen)
+        return IINField(IINBit::PARAM_ERROR);
+
+    std::string filename(reinterpret_cast<const char*>(static_cast<const uint8_t*>(data)), dataLen);
+
+    auto result = this->fileHandler->GetFileInfo(filename);
+
+    if (result.status != FileStatus::SUCCESS)
+    {
+        this->WriteGroup70Var4Response(writer, 0, 0, 0, 0, result.status);
+        return IINField::Empty();
+    }
+
+    this->WriteGroup70Var7Response(writer, result.info);
+    return IINField::Empty();
+}
+
+IINField OContext::HandleAuthenticateFile(const ser4cpp::rseq_t& objects, HeaderWriter& writer)
+{
+    if (!this->fileHandler)
+    {
+        return IINField(IINBit::FUNC_NOT_SUPPORTED);
+    }
+
+    // Parse Group70Var2 (authentication)
+    auto data = objects;
+
+    if (data.length() < 3)
+        return IINField(IINBit::PARAM_ERROR);
+
+    uint8_t group = data[0];
+    uint8_t var = data[1];
+    uint8_t qc = data[2];
+    data.advance(3);
+
+    if (group != 70 || var != 2 || qc != 0x5B)
+        return IINField(IINBit::PARAM_ERROR);
+
+    if (data.length() < 1)
+        return IINField(IINBit::PARAM_ERROR);
+    data.advance(1); // count
+
+    if (data.length() < 2)
+        return IINField(IINBit::PARAM_ERROR);
+    uint16_t dataLen = 0;
+    ser4cpp::LittleEndian::read(data, dataLen);
+
+    if (data.length() < dataLen || dataLen < 12)
+        return IINField(IINBit::PARAM_ERROR);
+
+    uint16_t userNameOffset = 0;
+    uint16_t userNameLength = 0;
+    uint16_t passwordOffset = 0;
+    uint16_t passwordLength = 0;
+    uint32_t authKey = 0;
+
+    ser4cpp::LittleEndian::read(data, userNameOffset);
+    ser4cpp::LittleEndian::read(data, userNameLength);
+    ser4cpp::LittleEndian::read(data, passwordOffset);
+    ser4cpp::LittleEndian::read(data, passwordLength);
+    ser4cpp::LittleEndian::read(data, authKey);
+
+    std::string username;
+    std::string password;
+
+    if (userNameLength > 0 && data.length() >= userNameLength)
+    {
+        username.assign(reinterpret_cast<const char*>(static_cast<const uint8_t*>(data)), userNameLength);
+        data.advance(userNameLength);
+    }
+    if (passwordLength > 0 && data.length() >= passwordLength)
+    {
+        password.assign(reinterpret_cast<const char*>(static_cast<const uint8_t*>(data)), passwordLength);
+    }
+
+    auto result = this->fileHandler->AuthenticateFile(username, password);
+
+    // Respond with Group70Var4 containing the auth key as fileHandle
+    this->WriteGroup70Var4Response(writer, result.authKey, 0, 0, 0, result.status);
+    return IINField::Empty();
+}
+
+IINField OContext::HandleAbortFile(const ser4cpp::rseq_t& objects, HeaderWriter& writer)
+{
+    if (!this->fileHandler)
+    {
+        return IINField(IINBit::FUNC_NOT_SUPPORTED);
+    }
+
+    // Parse Group70Var4 from objects
+    auto data = objects;
+
+    if (data.length() < 3)
+        return IINField(IINBit::PARAM_ERROR);
+
+    uint8_t group = data[0];
+    uint8_t var = data[1];
+    uint8_t qc = data[2];
+    data.advance(3);
+
+    if (group != 70 || var != 4 || qc != 0x5B)
+        return IINField(IINBit::PARAM_ERROR);
+
+    if (data.length() < 1)
+        return IINField(IINBit::PARAM_ERROR);
+    data.advance(1); // count
+
+    if (data.length() < 2)
+        return IINField(IINBit::PARAM_ERROR);
+    uint16_t dataLen = 0;
+    ser4cpp::LittleEndian::read(data, dataLen);
+
+    if (data.length() < dataLen || dataLen < 13)
+        return IINField(IINBit::PARAM_ERROR);
+
+    uint32_t fileHandle = 0;
+    ser4cpp::LittleEndian::read(data, fileHandle);
+
+    this->fileHandler->AbortFile(fileHandle);
+
+    this->WriteGroup70Var4Response(writer, fileHandle, 0, 0, 0, FileStatus::CLOSE_ABORT);
+    return IINField::Empty();
+}
+
+bool OContext::IsFileWriteRequest(const ser4cpp::rseq_t& objects)
+{
+    // A file block write has Group70Var5 in the object headers
+    if (objects.length() >= 3 && objects[0] == 70 && objects[1] == 5)
+    {
+        return true;
+    }
+    return false;
+}
+
+IINField OContext::HandleFileWrite(const ser4cpp::rseq_t& objects, HeaderWriter& writer)
+{
+    if (!this->fileHandler)
+    {
+        return IINField(IINBit::FUNC_NOT_SUPPORTED);
+    }
+
+    // Parse Group70Var5: header(3) + count(1) + length(2) + data(8+)
+    auto data = objects;
+
+    if (data.length() < 3)
+        return IINField(IINBit::PARAM_ERROR);
+
+    uint8_t group = data[0];
+    uint8_t var = data[1];
+    uint8_t qc = data[2];
+    data.advance(3);
+
+    if (group != 70 || var != 5 || qc != 0x5B)
+        return IINField(IINBit::PARAM_ERROR);
+
+    if (data.length() < 1)
+        return IINField(IINBit::PARAM_ERROR);
+    uint8_t count = data[0];
+    data.advance(1);
+
+    if (count < 1)
+        return IINField(IINBit::PARAM_ERROR);
+
+    if (data.length() < 2)
+        return IINField(IINBit::PARAM_ERROR);
+    uint16_t dataLen = 0;
+    ser4cpp::LittleEndian::read(data, dataLen);
+
+    if (data.length() < dataLen || dataLen < 8)
+        return IINField(IINBit::PARAM_ERROR);
+
+    uint32_t fileHandle = 0;
+    uint32_t blockField = 0;
+    ser4cpp::LittleEndian::read(data, fileHandle);
+    ser4cpp::LittleEndian::read(data, blockField);
+
+    uint32_t blockNum = blockField & 0x7FFFFFFF;
+    bool lastBlock = (blockField & 0x80000000) != 0;
+    size_t blockDataLen = dataLen - 8;
+
+    auto status = this->fileHandler->WriteBlock(fileHandle, blockNum, lastBlock, static_cast<const uint8_t*>(data),
+                                                blockDataLen);
+
+    this->WriteGroup70Var6Response(writer, fileHandle, blockNum, status);
+    return IINField::Empty();
+}
+
+//// ----------------------------- Group70 response writers -----------------------------
+
+bool OContext::WriteGroup70Var4Response(HeaderWriter& writer,
+                                        uint32_t fileHandle,
+                                        uint32_t fileSize,
+                                        uint16_t maxBlockSize,
+                                        uint16_t requestId,
+                                        FileStatus status)
+{
+    // Group70Var4: file_handle(u32), file_size(u32), max_block_size(u16),
+    //             request_id(u16), status_code(u8)
+    const uint16_t dataLen = 13;
+    const size_t totalLen = 3 + 1 + 2 + dataLen;
+
+    if (writer.Remaining() < totalLen)
+        return false;
+
+    if (!writer.WriteHeader(GroupVariationID(70, 4), QualifierCode::UINT8_CNT_UINT16_FREE_FORMAT))
+        return false;
+
+    uint8_t countBuf[1] = {1};
+    writer.WriteRawBytes(countBuf, 1);
+
+    uint8_t lenBuf[2];
+    lenBuf[0] = static_cast<uint8_t>(dataLen & 0xFF);
+    lenBuf[1] = static_cast<uint8_t>((dataLen >> 8) & 0xFF);
+    writer.WriteRawBytes(lenBuf, 2);
+
+    uint8_t buf[13];
+    auto wseq = ser4cpp::wseq_t(buf, 13);
+    ser4cpp::UInt32::write_to(wseq, fileHandle);
+    ser4cpp::UInt32::write_to(wseq, fileSize);
+    ser4cpp::UInt16::write_to(wseq, maxBlockSize);
+    ser4cpp::UInt16::write_to(wseq, requestId);
+    ser4cpp::UInt8::write_to(wseq, static_cast<uint8_t>(status));
+    writer.WriteRawBytes(buf, 13);
+
+    return true;
+}
+
+bool OContext::WriteGroup70Var5Response(
+    HeaderWriter& writer, uint32_t fileHandle, uint32_t blockNum, bool lastBlock, const uint8_t* data, size_t dataLen)
+{
+    // Group70Var5: file_handle(u32), block_number(u32), file_data(variable)
+    const uint16_t objDataLen = static_cast<uint16_t>(8 + dataLen);
+    const size_t totalLen = 3 + 1 + 2 + objDataLen;
+
+    if (writer.Remaining() < totalLen)
+        return false;
+
+    if (!writer.WriteHeader(GroupVariationID(70, 5), QualifierCode::UINT8_CNT_UINT16_FREE_FORMAT))
+        return false;
+
+    uint8_t countBuf[1] = {1};
+    writer.WriteRawBytes(countBuf, 1);
+
+    uint8_t lenBuf[2];
+    lenBuf[0] = static_cast<uint8_t>(objDataLen & 0xFF);
+    lenBuf[1] = static_cast<uint8_t>((objDataLen >> 8) & 0xFF);
+    writer.WriteRawBytes(lenBuf, 2);
+
+    uint32_t blockField = blockNum;
+    if (lastBlock)
+    {
+        blockField |= 0x80000000;
+    }
+
+    uint8_t hdr[8];
+    auto wseq = ser4cpp::wseq_t(hdr, 8);
+    ser4cpp::UInt32::write_to(wseq, fileHandle);
+    ser4cpp::UInt32::write_to(wseq, blockField);
+    writer.WriteRawBytes(hdr, 8);
+
+    if (dataLen > 0)
+    {
+        writer.WriteRawBytes(data, dataLen);
+    }
+
+    return true;
+}
+
+bool OContext::WriteGroup70Var6Response(HeaderWriter& writer, uint32_t fileHandle, uint32_t blockNum, FileStatus status)
+{
+    // Group70Var6: file_handle(u32), block_number(u32), status_code(u8)
+    const uint16_t dataLen = 9;
+    const size_t totalLen = 3 + 1 + 2 + dataLen;
+
+    if (writer.Remaining() < totalLen)
+        return false;
+
+    if (!writer.WriteHeader(GroupVariationID(70, 6), QualifierCode::UINT8_CNT_UINT16_FREE_FORMAT))
+        return false;
+
+    uint8_t countBuf[1] = {1};
+    writer.WriteRawBytes(countBuf, 1);
+
+    uint8_t lenBuf[2];
+    lenBuf[0] = static_cast<uint8_t>(dataLen & 0xFF);
+    lenBuf[1] = static_cast<uint8_t>((dataLen >> 8) & 0xFF);
+    writer.WriteRawBytes(lenBuf, 2);
+
+    uint8_t buf[9];
+    auto wseq = ser4cpp::wseq_t(buf, 9);
+    ser4cpp::UInt32::write_to(wseq, fileHandle);
+    ser4cpp::UInt32::write_to(wseq, blockNum);
+    ser4cpp::UInt8::write_to(wseq, static_cast<uint8_t>(status));
+    writer.WriteRawBytes(buf, 9);
+
+    return true;
+}
+
+bool OContext::WriteGroup70Var7Response(HeaderWriter& writer, const FileInfo& info)
+{
+    // Group70Var7: file_name_offset(u16), file_name_length(u16),
+    //             file_type(u16), file_size(u32), time_of_creation(6 bytes),
+    //             permissions(u16), request_id(u16), file_name(variable)
+    const uint16_t fileNameLen = static_cast<uint16_t>(info.fileName.size());
+    const uint16_t fixedLen = 20; // 2+2+2+4+6+2+2
+    const uint16_t dataLen = fixedLen + fileNameLen;
+    const size_t totalLen = 3 + 1 + 2 + dataLen;
+
+    if (writer.Remaining() < totalLen)
+        return false;
+
+    if (!writer.WriteHeader(GroupVariationID(70, 7), QualifierCode::UINT8_CNT_UINT16_FREE_FORMAT))
+        return false;
+
+    uint8_t countBuf[1] = {1};
+    writer.WriteRawBytes(countBuf, 1);
+
+    uint8_t lenBuf[2];
+    lenBuf[0] = static_cast<uint8_t>(dataLen & 0xFF);
+    lenBuf[1] = static_cast<uint8_t>((dataLen >> 8) & 0xFF);
+    writer.WriteRawBytes(lenBuf, 2);
+
+    uint8_t buf[20];
+    auto wseq = ser4cpp::wseq_t(buf, 20);
+
+    ser4cpp::UInt16::write_to(wseq, fixedLen);                         // file_name_offset
+    ser4cpp::UInt16::write_to(wseq, fileNameLen);                      // file_name_length
+    ser4cpp::UInt16::write_to(wseq, static_cast<uint16_t>(info.type)); // file_type
+    ser4cpp::UInt32::write_to(wseq, info.size);                        // file_size
+
+    // time_of_creation: 6 bytes
+    for (int i = 0; i < 6; ++i)
+    {
+        ser4cpp::UInt8::write_to(wseq, static_cast<uint8_t>((info.timeOfCreation >> (i * 8)) & 0xFF));
+    }
+
+    ser4cpp::UInt16::write_to(wseq, info.permissions.ToRaw()); // permissions
+    ser4cpp::UInt16::write_to(wseq, info.requestId);           // request_id
+
+    writer.WriteRawBytes(buf, 20);
+
+    // file_name
+    if (fileNameLen > 0)
+    {
+        writer.WriteRawBytes(reinterpret_cast<const uint8_t*>(info.fileName.data()), fileNameLen);
+    }
+
+    return true;
 }
 
 } // namespace opendnp3

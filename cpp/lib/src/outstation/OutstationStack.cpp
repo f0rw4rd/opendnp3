@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -28,7 +29,8 @@ OutstationStack::OutstationStack(const Logger& logger,
                                  const std::shared_ptr<IOutstationApplication>& application,
                                  const std::shared_ptr<IOHandler>& iohandler,
                                  const std::shared_ptr<IResourceManager>& manager,
-                                 const OutstationStackConfig& config)
+                                 const OutstationStackConfig& config,
+                                 const std::shared_ptr<IFileHandler>& fileHandler)
     :
 
       StackBase(logger,
@@ -45,7 +47,8 @@ OutstationStack::OutstationStack(const Logger& logger,
                executor,
                tstack.transport,
                commandHandler,
-               application)
+               application,
+               fileHandler)
 {
     this->tstack.transport->SetAppLayer(ocontext);
 }

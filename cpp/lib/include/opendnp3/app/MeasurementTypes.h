@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -159,6 +160,20 @@ public:
     AnalogOutputStatus(double value, Flags flags);
 
     AnalogOutputStatus(double value, Flags flags, DNPTime time);
+};
+
+/**
+    Analog input dead-band values (Group 34). These have no quality/flags or timestamps.
+    The value represents the deadband threshold for analog input change reporting.
+*/
+class AnalogInputDeadband
+{
+public:
+    AnalogInputDeadband();
+
+    explicit AnalogInputDeadband(double value);
+
+    double value;
 };
 
 /**

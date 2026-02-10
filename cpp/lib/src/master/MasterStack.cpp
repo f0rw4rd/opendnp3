@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -42,13 +43,13 @@ MasterStack::MasterStack(const Logger& logger,
                 config.master.maxRxFragSize,
                 LinkLayerConfig(config.link, false)),
       mcontext(MContext::Create(Addresses(config.link.LocalAddr, config.link.RemoteAddr),
-               logger,
-               executor,
-               tstack.transport,
-               SOEHandler,
-               application,
-               scheduler,
-               config.master))
+                                logger,
+                                executor,
+                                tstack.transport,
+                                SOEHandler,
+                                application,
+                                scheduler,
+                                config.master))
 {
     tstack.transport->SetAppLayer(*mcontext);
 }
@@ -199,6 +200,97 @@ void MasterStack::PerformFunction(const std::string& name,
     auto add = [self = this->shared_from_this(), name, func, builder = ConvertToLambda(headers), config]() {
         return self->mcontext->PerformFunction(name, func, builder, config);
     };
+    return this->executor->post(add);
+}
+
+void MasterStack::Freeze(FreezeType type, const std::vector<Header>& headers, const TaskConfig& config)
+{
+    auto add = [self = this->shared_from_this(), type, builder = ConvertToLambda(headers), config]() {
+        return self->mcontext->Freeze(type, builder, config);
+    };
+    return this->executor->post(add);
+}
+
+void MasterStack::ReadFile(const std::string& filename, const FileReadCallbackT& callback, const TaskConfig& config)
+{
+    auto add = [self = this->shared_from_this(), filename, callback, config]() {
+        return self->mcontext->ReadFile(filename, callback, config);
+    };
+    return this->executor->post(add);
+}
+
+void MasterStack::GetFileInfo(const std::string& filename, const FileInfoCallbackT& callback, const TaskConfig& config)
+{
+    auto add = [self = this->shared_from_this(), filename, callback, config]() {
+        return self->mcontext->GetFileInfo(filename, callback, config);
+    };
+    return this->executor->post(add);
+}
+
+void MasterStack::DeleteFile(const std::string& filename,
+                             const FileOperationCallbackT& callback,
+                             const TaskConfig& config)
+{
+    auto add = [self = this->shared_from_this(), filename, callback, config]() {
+        return self->mcontext->DeleteFile(filename, callback, config);
+    };
+    return this->executor->post(add);
+}
+
+void MasterStack::WriteFile(const std::string& filename,
+                            const std::vector<uint8_t>& data,
+                            FilePermissions permissions,
+                            const FileWriteCallbackT& callback,
+                            const TaskConfig& config)
+{
+    auto add = [self = this->shared_from_this(), filename, data, permissions, callback, config]() {
+        return self->mcontext->WriteFile(filename, data, permissions, callback, config);
+    };
+    return this->executor->post(add);
+}
+
+void MasterStack::ReadDirectory(const std::string& directoryPath,
+                                const DirectoryReadCallbackT& callback,
+                                const TaskConfig& config)
+{
+    auto add = [self = this->shared_from_this(), directoryPath, callback, config]() {
+        return self->mcontext->ReadDirectory(directoryPath, callback, config);
+    };
+    return this->executor->post(add);
+}
+
+void MasterStack::AbortFile(uint32_t fileHandle, const FileOperationCallbackT& callback, const TaskConfig& config)
+{
+    auto add = [self = this->shared_from_this(), fileHandle, callback, config]() {
+        return self->mcontext->AbortFile(fileHandle, callback, config);
+    };
+    return this->executor->post(add);
+}
+
+void MasterStack::AuthenticateFile(const std::string& username,
+                                   const std::string& password,
+                                   const FileAuthCallbackT& callback,
+                                   const TaskConfig& config)
+{
+    auto add = [self = this->shared_from_this(), username, password, callback, config]() {
+        return self->mcontext->AuthenticateFile(username, password, callback, config);
+    };
+    return this->executor->post(add);
+}
+
+void MasterStack::WriteDeadBands(const std::vector<Indexed<AnalogInputDeadband>>& deadBands,
+                                 const FileOperationCallbackT& callback,
+                                 const TaskConfig& config)
+{
+    auto add = [self = this->shared_from_this(), deadBands, callback, config]() {
+        return self->mcontext->WriteDeadBands(deadBands, callback, config);
+    };
+    return this->executor->post(add);
+}
+
+void MasterStack::CheckLinkStatus(const std::function<void(bool)>& callback)
+{
+    auto add = [self = this->shared_from_this(), callback]() { self->tstack.link->CheckLinkStatus(callback); };
     return this->executor->post(add);
 }
 

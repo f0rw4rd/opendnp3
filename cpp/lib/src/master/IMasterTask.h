@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -107,6 +108,16 @@ public:
      * Return false if some kind of internal error prevents the task for formatting the request.
      */
     virtual bool BuildRequest(APDURequest& request, uint8_t seq) = 0;
+
+    /**
+     * Whether this task expects a response from the outstation.
+     * Tasks using no-response function codes (e.g. DIRECT_OPERATE_NR, IMMED_FREEZE_NR)
+     * should return false so the master does not start a response timer.
+     */
+    virtual bool ExpectsResponse() const
+    {
+        return true;
+    }
 
     /**
      * Handler for responses

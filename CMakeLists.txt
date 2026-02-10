@@ -43,7 +43,7 @@ else()
 endif()
 
 # Compilation options
-option(DNP3_TLS "Build TLS client/server support (requires OpenSSL)" OFF)
+option(DNP3_TLS "Build TLS client/server support (requires OpenSSL)" ON)
 option(DNP3_TESTS "Build unit and integration tests" OFF)
 option(DNP3_EXAMPLES "Build example applications" OFF)
 option(DNP3_FUZZING "Build Google OSS-Fuzz targets" OFF)
@@ -53,18 +53,22 @@ if(WIN32)
     option(DNP3_DOTNET "Build the .NET bindings" OFF)
     set(DNP3_DOTNET_FRAMEWORK_VERSION "v4.5" CACHE STRING "The target .NET framework version for the .NET components")
 endif()
+option(DNP3_PYTHON "Build Python bindings (requires Python and pybind11)" OFF)
 option(DNP3_EVERYTHING "Build all optional targets" OFF)
 option(DNP3_STATIC_LIBS "Build static libraries instead of shared libraries" ${DNP3_STATIC_LIBS_BY_DEFAULT})
+option(DNP3_LTO "Enable Link-Time Optimization for release builds" OFF)
+option(DNP3_INTEROP_TESTS "Build interop tests against stepfunc/dnp3 (requires prebuilt FFI library)" OFF)
 
 if(DNP3_EVERYTHING)
     set(DNP3_TLS ON)
     set(DNP3_TESTS ON)
     set(DNP3_EXAMPLES ON)
     set(DNP3_FUZZING ON)
-    set(DNP3_JAVA ON)
-    if(WIN32)
-        set(DNP3_DOTNET ON)
-    endif()
+    set(DNP3_PYTHON ON)
+endif()
+
+if(DNP3_STATIC_LIBS AND DNP3_PYTHON)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 
 if(DNP3_STATIC_LIBS)
@@ -100,6 +104,18 @@ if(DNP3_COVERAGE)
     add_coverage_flags()
 endif()
 
+# Link-Time Optimization
+if(DNP3_LTO AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT ipo_supported OUTPUT ipo_output)
+    if(ipo_supported)
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+        message(STATUS "Link-Time Optimization enabled")
+    else()
+        message(WARNING "LTO requested but not supported: ${ipo_output}")
+    endif()
+endif()
+
 # Library
 add_subdirectory(./cpp/lib)
 
@@ -111,6 +127,11 @@ if(DNP3_TESTS)
     add_subdirectory(./cpp/tests/unit)
     add_subdirectory(./cpp/tests/asiotests)
     add_subdirectory(./cpp/tests/integration)
+
+    if(DNP3_INTEROP_TESTS)
+        include(./deps/stepfunc_dnp3.cmake)
+        add_subdirectory(./cpp/tests/interop)
+    endif()
 
     if(DNP3_COVERAGE)
         define_coverage_target(
@@ -151,10 +172,13 @@ if(DNP3_JAVA)
 endif()
 
 if(WIN32 AND DNP3_DOTNET)
+    message("The .NET framework version is: ${DNP3_DOTNET_FRAMEWORK_VERSION}")
+    add_subdirectory(./dotnet)
+endif()
 
-  message("The .NET framework version is: ${DNP3_DOTNET_FRAMEWORK_VERSION}")
-  add_subdirectory(./dotnet)
-
+if(DNP3_PYTHON)
+    include(./deps/pybind11.cmake)
+    add_subdirectory(./python)
 endif()
 
 # Define utility targets

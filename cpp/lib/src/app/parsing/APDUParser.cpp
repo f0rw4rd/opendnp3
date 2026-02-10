@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -23,6 +24,7 @@
 #include "app/MeasurementFactory.h"
 #include "app/parsing/CountIndexParser.h"
 #include "app/parsing/CountParser.h"
+#include "app/parsing/FreeFormatParser.h"
 #include "app/parsing/ObjectHeaderParser.h"
 #include "app/parsing/RangeParser.h"
 #include "logging/LogMacros.h"
@@ -139,6 +141,9 @@ ParseResult APDUParser::ParseQualifier(ser4cpp::rseq_t& buffer,
 
     case (QualifierCode::UINT16_CNT_UINT16_INDEX):
         return CountIndexParser::ParseHeader(buffer, NumParser::TwoByte(), settings, record, pLogger, pHandler);
+
+    case (QualifierCode::UINT8_CNT_UINT16_FREE_FORMAT):
+        return FreeFormatParser::ParseHeader(buffer, settings, record, pLogger, pHandler);
 
     default:
         FORMAT_LOGGER_BLOCK(pLogger, flags::WARN, "Unknown qualifier %x", record.qualifier);

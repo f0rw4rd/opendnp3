@@ -7,11 +7,12 @@
 // |_| \_|\___/  |______\__,_|_|\__|_|_| |_|\__, (_|_|_)
 //                                           __/ |
 //                                          |___/
-// 
+//
 // This file is auto-generated. Do not edit manually
-// 
+//
 // Copyright 2013-2022 Step Function I/O, LLC
-// 
+// Modified 2024-2026 f0rw4rd (experimental fork)
+//
 // Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
 // LLC (https://stepfunc.io) under one or more contributor license agreements.
 // See the NOTICE file distributed with this work for additional information
@@ -19,9 +20,9 @@
 // this file to you under the Apache License, Version 2.0 (the "License"); you
 // may not use this file except in compliance with the License. You may obtain
 // a copy of the License at:
-// 
+//
 //   http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,34 +36,42 @@
 #include <cstdint>
 #include <string>
 
-namespace opendnp3 {
+namespace opendnp3
+{
 
 /**
   Object header range/prefix as a single enumeration
 */
 enum class QualifierCode : uint8_t
 {
-  UINT8_START_STOP = 0x0,
-  UINT16_START_STOP = 0x1,
-  ALL_OBJECTS = 0x6,
-  UINT8_CNT = 0x7,
-  UINT16_CNT = 0x8,
-  UINT8_CNT_UINT8_INDEX = 0x17,
-  UINT16_CNT_UINT16_INDEX = 0x28,
-  UNDEFINED = 0xFF
+    UINT8_START_STOP = 0x0,
+    UINT16_START_STOP = 0x1,
+    UINT32_START_STOP = 0x02,
+    UINT8_ADDR = 0x03,
+    UINT16_ADDR = 0x04,
+    UINT32_ADDR = 0x05,
+    ALL_OBJECTS = 0x6,
+    UINT8_CNT = 0x7,
+    UINT16_CNT = 0x8,
+    UINT32_CNT = 0x09,
+    UINT8_CNT_UINT8_INDEX = 0x17,
+    UINT16_CNT_UINT16_INDEX = 0x28,
+    UINT32_CNT_UINT8_INDEX = 0x37,
+    UINT8_CNT_UINT16_FREE_FORMAT = 0x5B,
+    UNDEFINED = 0xFF
 };
 
 struct QualifierCodeSpec
 {
-  using enum_type_t = QualifierCode;
+    using enum_type_t = QualifierCode;
 
-  static uint8_t to_type(QualifierCode arg);
-  static QualifierCode from_type(uint8_t arg);
-  static char const* to_string(QualifierCode arg);
-  static char const* to_human_string(QualifierCode arg);
-  static QualifierCode from_string(const std::string& arg);
+    static uint8_t to_type(QualifierCode arg);
+    static QualifierCode from_type(uint8_t arg);
+    static char const* to_string(QualifierCode arg);
+    static char const* to_human_string(QualifierCode arg);
+    static QualifierCode from_string(const std::string& arg);
 };
 
-}
+} // namespace opendnp3
 
 #endif

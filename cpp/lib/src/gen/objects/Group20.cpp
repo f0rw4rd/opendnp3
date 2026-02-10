@@ -7,11 +7,12 @@
 // |_| \_|\___/  |______\__,_|_|\__|_|_| |_|\__, (_|_|_)
 //                                           __/ |
 //                                          |___/
-// 
+//
 // This file is auto-generated. Do not edit manually
-// 
+//
 // Copyright 2013-2022 Step Function I/O, LLC
-// 
+// Modified 2024-2026 f0rw4rd (experimental fork)
+//
 // Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
 // LLC (https://stepfunc.io) under one or more contributor license agreements.
 // See the NOTICE file distributed with this work for additional information
@@ -19,9 +20,9 @@
 // this file to you under the Apache License, Version 2.0 (the "License"); you
 // may not use this file except in compliance with the License. You may obtain
 // a copy of the License at:
-// 
+//
 //   http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,150 +32,279 @@
 
 #include "Group20.h"
 
-#include "app/parsing/DNPTimeParsing.h"
-#include <ser4cpp/serialization/LittleEndian.h>
 #include "app/MeasurementFactory.h"
 #include "app/WriteConversions.h"
+#include "app/parsing/DNPTimeParsing.h"
+
+#include <ser4cpp/serialization/LittleEndian.h>
 
 using namespace ser4cpp;
 
-namespace opendnp3 {
+namespace opendnp3
+{
 
 // ------- Group20Var1 -------
 
-Group20Var1::Group20Var1() : flags(0), value(0)
-{}
+Group20Var1::Group20Var1() : flags(0), value(0) {}
 
 bool Group20Var1::Read(rseq_t& buffer, Group20Var1& output)
 {
-  return LittleEndian::read(buffer, output.flags, output.value);
+    return LittleEndian::read(buffer, output.flags, output.value);
 }
 
 bool Group20Var1::Write(const Group20Var1& arg, ser4cpp::wseq_t& buffer)
 {
-  return LittleEndian::write(buffer, arg.flags, arg.value);
+    return LittleEndian::write(buffer, arg.flags, arg.value);
 }
 
 bool Group20Var1::ReadTarget(rseq_t& buff, Counter& output)
 {
-  Group20Var1 value;
-  if(Read(buff, value))
-  {
-    output = CounterFactory::From(value.flags, value.value);
-    return true;
-  }
-  else
-  {
-    return false;
-  }
+    Group20Var1 value;
+    if (Read(buff, value))
+    {
+        output = CounterFactory::From(value.flags, value.value);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 bool Group20Var1::WriteTarget(const Counter& value, ser4cpp::wseq_t& buff)
 {
-  return Group20Var1::Write(ConvertGroup20Var1::Apply(value), buff);
+    return Group20Var1::Write(ConvertGroup20Var1::Apply(value), buff);
 }
 
 // ------- Group20Var2 -------
 
-Group20Var2::Group20Var2() : flags(0), value(0)
-{}
+Group20Var2::Group20Var2() : flags(0), value(0) {}
 
 bool Group20Var2::Read(rseq_t& buffer, Group20Var2& output)
 {
-  return LittleEndian::read(buffer, output.flags, output.value);
+    return LittleEndian::read(buffer, output.flags, output.value);
 }
 
 bool Group20Var2::Write(const Group20Var2& arg, ser4cpp::wseq_t& buffer)
 {
-  return LittleEndian::write(buffer, arg.flags, arg.value);
+    return LittleEndian::write(buffer, arg.flags, arg.value);
 }
 
 bool Group20Var2::ReadTarget(rseq_t& buff, Counter& output)
 {
-  Group20Var2 value;
-  if(Read(buff, value))
-  {
-    output = CounterFactory::From(value.flags, value.value);
-    return true;
-  }
-  else
-  {
-    return false;
-  }
+    Group20Var2 value;
+    if (Read(buff, value))
+    {
+        output = CounterFactory::From(value.flags, value.value);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 bool Group20Var2::WriteTarget(const Counter& value, ser4cpp::wseq_t& buff)
 {
-  return Group20Var2::Write(ConvertGroup20Var2::Apply(value), buff);
+    return Group20Var2::Write(ConvertGroup20Var2::Apply(value), buff);
+}
+
+// ------- Group20Var3 -------
+
+Group20Var3::Group20Var3() : flags(0), value(0) {}
+
+bool Group20Var3::Read(rseq_t& buffer, Group20Var3& output)
+{
+    return LittleEndian::read(buffer, output.flags, output.value);
+}
+
+bool Group20Var3::Write(const Group20Var3& arg, ser4cpp::wseq_t& buffer)
+{
+    return LittleEndian::write(buffer, arg.flags, arg.value);
+}
+
+bool Group20Var3::ReadTarget(rseq_t& buff, Counter& output)
+{
+    Group20Var3 value;
+    if (Read(buff, value))
+    {
+        output = CounterFactory::From(value.flags, value.value);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool Group20Var3::WriteTarget(const Counter& value, ser4cpp::wseq_t& buff)
+{
+    return Group20Var3::Write(ConvertGroup20Var3::Apply(value), buff);
+}
+
+// ------- Group20Var4 -------
+
+Group20Var4::Group20Var4() : flags(0), value(0) {}
+
+bool Group20Var4::Read(rseq_t& buffer, Group20Var4& output)
+{
+    return LittleEndian::read(buffer, output.flags, output.value);
+}
+
+bool Group20Var4::Write(const Group20Var4& arg, ser4cpp::wseq_t& buffer)
+{
+    return LittleEndian::write(buffer, arg.flags, arg.value);
+}
+
+bool Group20Var4::ReadTarget(rseq_t& buff, Counter& output)
+{
+    Group20Var4 value;
+    if (Read(buff, value))
+    {
+        output = CounterFactory::From(value.flags, value.value);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool Group20Var4::WriteTarget(const Counter& value, ser4cpp::wseq_t& buff)
+{
+    return Group20Var4::Write(ConvertGroup20Var4::Apply(value), buff);
 }
 
 // ------- Group20Var5 -------
 
-Group20Var5::Group20Var5() : value(0)
-{}
+Group20Var5::Group20Var5() : value(0) {}
 
 bool Group20Var5::Read(rseq_t& buffer, Group20Var5& output)
 {
-  return LittleEndian::read(buffer, output.value);
+    return LittleEndian::read(buffer, output.value);
 }
 
 bool Group20Var5::Write(const Group20Var5& arg, ser4cpp::wseq_t& buffer)
 {
-  return LittleEndian::write(buffer, arg.value);
+    return LittleEndian::write(buffer, arg.value);
 }
 
 bool Group20Var5::ReadTarget(rseq_t& buff, Counter& output)
 {
-  Group20Var5 value;
-  if(Read(buff, value))
-  {
-    output = CounterFactory::From(value.value);
-    return true;
-  }
-  else
-  {
-    return false;
-  }
+    Group20Var5 value;
+    if (Read(buff, value))
+    {
+        output = CounterFactory::From(value.value);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 bool Group20Var5::WriteTarget(const Counter& value, ser4cpp::wseq_t& buff)
 {
-  return Group20Var5::Write(ConvertGroup20Var5::Apply(value), buff);
+    return Group20Var5::Write(ConvertGroup20Var5::Apply(value), buff);
 }
 
 // ------- Group20Var6 -------
 
-Group20Var6::Group20Var6() : value(0)
-{}
+Group20Var6::Group20Var6() : value(0) {}
 
 bool Group20Var6::Read(rseq_t& buffer, Group20Var6& output)
 {
-  return LittleEndian::read(buffer, output.value);
+    return LittleEndian::read(buffer, output.value);
 }
 
 bool Group20Var6::Write(const Group20Var6& arg, ser4cpp::wseq_t& buffer)
 {
-  return LittleEndian::write(buffer, arg.value);
+    return LittleEndian::write(buffer, arg.value);
 }
 
 bool Group20Var6::ReadTarget(rseq_t& buff, Counter& output)
 {
-  Group20Var6 value;
-  if(Read(buff, value))
-  {
-    output = CounterFactory::From(value.value);
-    return true;
-  }
-  else
-  {
-    return false;
-  }
+    Group20Var6 value;
+    if (Read(buff, value))
+    {
+        output = CounterFactory::From(value.value);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 bool Group20Var6::WriteTarget(const Counter& value, ser4cpp::wseq_t& buff)
 {
-  return Group20Var6::Write(ConvertGroup20Var6::Apply(value), buff);
+    return Group20Var6::Write(ConvertGroup20Var6::Apply(value), buff);
 }
 
+// ------- Group20Var7 -------
 
+Group20Var7::Group20Var7() : value(0) {}
+
+bool Group20Var7::Read(rseq_t& buffer, Group20Var7& output)
+{
+    return LittleEndian::read(buffer, output.value);
 }
+
+bool Group20Var7::Write(const Group20Var7& arg, ser4cpp::wseq_t& buffer)
+{
+    return LittleEndian::write(buffer, arg.value);
+}
+
+bool Group20Var7::ReadTarget(rseq_t& buff, Counter& output)
+{
+    Group20Var7 value;
+    if (Read(buff, value))
+    {
+        output = CounterFactory::From(value.value);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool Group20Var7::WriteTarget(const Counter& value, ser4cpp::wseq_t& buff)
+{
+    return Group20Var7::Write(ConvertGroup20Var7::Apply(value), buff);
+}
+
+// ------- Group20Var8 -------
+
+Group20Var8::Group20Var8() : value(0) {}
+
+bool Group20Var8::Read(rseq_t& buffer, Group20Var8& output)
+{
+    return LittleEndian::read(buffer, output.value);
+}
+
+bool Group20Var8::Write(const Group20Var8& arg, ser4cpp::wseq_t& buffer)
+{
+    return LittleEndian::write(buffer, arg.value);
+}
+
+bool Group20Var8::ReadTarget(rseq_t& buff, Counter& output)
+{
+    Group20Var8 value;
+    if (Read(buff, value))
+    {
+        output = CounterFactory::From(value.value);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool Group20Var8::WriteTarget(const Counter& value, ser4cpp::wseq_t& buff)
+{
+    return Group20Var8::Write(ConvertGroup20Var8::Apply(value), buff);
+}
+
+} // namespace opendnp3

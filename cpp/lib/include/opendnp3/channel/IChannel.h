@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -29,6 +30,7 @@
 #include "opendnp3/master/ISOEHandler.h"
 #include "opendnp3/master/MasterStackConfig.h"
 #include "opendnp3/outstation/ICommandHandler.h"
+#include "opendnp3/outstation/IFileHandler.h"
 #include "opendnp3/outstation/IOutstation.h"
 #include "opendnp3/outstation/IOutstationApplication.h"
 #include "opendnp3/outstation/OutstationStackConfig.h"
@@ -84,12 +86,14 @@ public:
      * @param commandHandler Callback object for handling command requests
      * @param application Callback object for user code
      * @param config Configuration object that controls how the outstation behaves
+     * @param fileHandler Optional callback for handling file transfer operations
      * @return shared_ptr to the running outstation
      */
     virtual std::shared_ptr<IOutstation> AddOutstation(const std::string& id,
                                                        std::shared_ptr<ICommandHandler> commandHandler,
                                                        std::shared_ptr<IOutstationApplication> application,
-                                                       const OutstationStackConfig& config)
+                                                       const OutstationStackConfig& config,
+                                                       std::shared_ptr<IFileHandler> fileHandler = nullptr)
         = 0;
 };
 

@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -154,6 +155,39 @@ public:
                          FunctionCode func,
                          const std::vector<Header>& headers,
                          const TaskConfig& config) override;
+
+    void Freeze(FreezeType type, const std::vector<Header>& headers, const TaskConfig& config) override;
+
+    void ReadFile(const std::string& filename, const FileReadCallbackT& callback, const TaskConfig& config) override;
+
+    void GetFileInfo(const std::string& filename, const FileInfoCallbackT& callback, const TaskConfig& config) override;
+
+    void DeleteFile(const std::string& filename,
+                    const FileOperationCallbackT& callback,
+                    const TaskConfig& config) override;
+
+    void WriteFile(const std::string& filename,
+                   const std::vector<uint8_t>& data,
+                   FilePermissions permissions,
+                   const FileWriteCallbackT& callback,
+                   const TaskConfig& config) override;
+
+    void ReadDirectory(const std::string& directoryPath,
+                       const DirectoryReadCallbackT& callback,
+                       const TaskConfig& config) override;
+
+    void AbortFile(uint32_t fileHandle, const FileOperationCallbackT& callback, const TaskConfig& config) override;
+
+    void AuthenticateFile(const std::string& username,
+                          const std::string& password,
+                          const FileAuthCallbackT& callback,
+                          const TaskConfig& config) override;
+
+    void WriteDeadBands(const std::vector<Indexed<AnalogInputDeadband>>& deadBands,
+                        const FileOperationCallbackT& callback,
+                        const TaskConfig& config) override;
+
+    void CheckLinkStatus(const std::function<void(bool)>& callback) override;
 
     // ------- implement ICommandProcessor ---------
 

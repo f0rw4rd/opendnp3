@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -31,12 +32,11 @@ OctetData::OctetData() : size(1) {}
 
 OctetData::OctetData(const char* input) : OctetData(ToSlice(input)) {}
 
-OctetData::OctetData(const Buffer& input)
-    : size(input.length == 0 ? 1 : ser4cpp::min<uint8_t>(MAX_SIZE, static_cast<uint8_t>(input.length)))
+OctetData::OctetData(const Buffer& input) : size(ser4cpp::min<uint8_t>(MAX_SIZE, static_cast<uint8_t>(input.length)))
 {
-    ser4cpp::rseq_t input_slice(input.data, input.length);
-    if (input_slice.is_not_empty())
+    if (size > 0)
     {
+        ser4cpp::rseq_t input_slice(input.data, input.length);
         ser4cpp::wseq_t dest(buffer.data(), buffer.size());
         dest.copy_from(input_slice.take(size));
     }
@@ -48,8 +48,7 @@ bool OctetData::Set(const Buffer& input)
     if (input_slice.is_empty())
     {
         this->size = 0;
-        this->buffer[0] = 0x00;
-        return false;
+        return true;
     }
 
     const bool is_oversized = input_slice.length() > MAX_SIZE;

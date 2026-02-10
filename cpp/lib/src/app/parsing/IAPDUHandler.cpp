@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -131,6 +132,11 @@ void IAPDUHandler::OnHeader(const RangeHeader& header, const ICollection<Indexed
     Record(header, this->ProcessHeader(header, values));
 }
 
+void IAPDUHandler::OnHeader(const RangeHeader& header, const ICollection<Indexed<AnalogInputDeadband>>& values)
+{
+    Record(header, this->ProcessHeader(header, values));
+}
+
 // --- index prefixes ----
 
 void IAPDUHandler::OnHeader(const PrefixHeader& header, const ICollection<Indexed<Binary>>& values)
@@ -184,6 +190,11 @@ void IAPDUHandler::OnHeader(const PrefixHeader& header, const ICollection<Indexe
 }
 
 void IAPDUHandler::OnHeader(const PrefixHeader& header, const ICollection<Indexed<AnalogCommandEvent>>& values)
+{
+    Record(header, this->ProcessHeader(header, values));
+}
+
+void IAPDUHandler::OnHeader(const PrefixHeader& header, const ICollection<Indexed<AnalogInputDeadband>>& values)
 {
     Record(header, this->ProcessHeader(header, values));
 }
@@ -324,6 +335,12 @@ IINField IAPDUHandler::ProcessHeader(const RangeHeader& /*header*/,
     return ProcessUnsupportedHeader();
 }
 
+IINField IAPDUHandler::ProcessHeader(const RangeHeader& /*header*/,
+                                     const ICollection<Indexed<AnalogInputDeadband>>& /*values*/)
+{
+    return ProcessUnsupportedHeader();
+}
+
 /// ---- index prefixes -----
 
 IINField IAPDUHandler::ProcessHeader(const PrefixHeader& /*header*/, const ICollection<Indexed<Counter>>& /*values*/)
@@ -385,6 +402,12 @@ IINField IAPDUHandler::ProcessHeader(const PrefixHeader& /*header*/,
 
 IINField IAPDUHandler::ProcessHeader(const PrefixHeader& /*header*/,
                                      const ICollection<Indexed<AnalogCommandEvent>>& /*values*/)
+{
+    return ProcessUnsupportedHeader();
+}
+
+IINField IAPDUHandler::ProcessHeader(const PrefixHeader& /*header*/,
+                                     const ICollection<Indexed<AnalogInputDeadband>>& /*values*/)
 {
     return ProcessUnsupportedHeader();
 }

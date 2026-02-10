@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -25,11 +26,20 @@
 #include "gen/objects/Group12.h"
 #include "gen/objects/Group41.h"
 #include "logging/LogMacros.h"
+#include "master/AbortFileTask.h"
+#include "master/AuthenticateFileTask.h"
 #include "master/CommandTask.h"
+#include "master/DeleteFileTask.h"
 #include "master/EmptyResponseTask.h"
+#include "master/FileTransferTask.h"
+#include "master/FileWriteTask.h"
+#include "master/GetFileInfoTask.h"
 #include "master/MeasurementHandler.h"
+#include "master/NoResponseTask.h"
+#include "master/ReadDirectoryTask.h"
 #include "master/RestartOperationTask.h"
 #include "master/UserPollTask.h"
+#include "master/WriteDeadBandTask.h"
 
 #include "opendnp3/logging/LogLevels.h"
 
@@ -59,17 +69,17 @@ MContext::MContext(const Addresses& addresses,
 {
 }
 
-std::shared_ptr<MContext> MContext::Create(
-    const Addresses& addresses,
-    const Logger& logger,
-    const std::shared_ptr<exe4cpp::IExecutor>& executor,
-    std::shared_ptr<ILowerLayer> lower,
-    const std::shared_ptr<ISOEHandler>& SOEHandler,
-    const std::shared_ptr<IMasterApplication>& application,
-    std::shared_ptr<IMasterScheduler> scheduler,
-    const MasterParams& params)
+std::shared_ptr<MContext> MContext::Create(const Addresses& addresses,
+                                           const Logger& logger,
+                                           const std::shared_ptr<exe4cpp::IExecutor>& executor,
+                                           std::shared_ptr<ILowerLayer> lower,
+                                           const std::shared_ptr<ISOEHandler>& SOEHandler,
+                                           const std::shared_ptr<IMasterApplication>& application,
+                                           std::shared_ptr<IMasterScheduler> scheduler,
+                                           const MasterParams& params)
 {
-    return std::shared_ptr<MContext>(new MContext(addresses, logger, executor, lower, SOEHandler, application, scheduler, params));
+    return std::shared_ptr<MContext>(
+        new MContext(addresses, logger, executor, lower, SOEHandler, application, scheduler, params));
 }
 
 bool MContext::OnLowerLayerUp()
@@ -415,6 +425,121 @@ void MContext::PerformFunction(const std::string& name,
     this->ScheduleAdhocTask(task);
 }
 
+void MContext::Freeze(FreezeType type, const HeaderBuilderT& builder, TaskConfig config)
+{
+    const auto timeout = Timestamp(this->executor->get_time()) + params.taskStartTimeout;
+
+    FunctionCode func;
+    bool expectsResponse;
+    switch (type)
+    {
+    case FreezeType::ImmediateFreeze:
+        func = FunctionCode::IMMED_FREEZE;
+        expectsResponse = true;
+        break;
+    case FreezeType::ImmediateFreezeNR:
+        func = FunctionCode::IMMED_FREEZE_NR;
+        expectsResponse = false;
+        break;
+    case FreezeType::FreezeAndClear:
+        func = FunctionCode::FREEZE_CLEAR;
+        expectsResponse = true;
+        break;
+    case FreezeType::FreezeAndClearNR:
+        func = FunctionCode::FREEZE_CLEAR_NR;
+        expectsResponse = false;
+        break;
+    default:
+        func = FunctionCode::IMMED_FREEZE;
+        expectsResponse = true;
+        break;
+    }
+
+    std::shared_ptr<IMasterTask> task;
+    const char* name = FunctionCodeSpec::to_human_string(func);
+
+    if (expectsResponse)
+    {
+        task = std::make_shared<EmptyResponseTask>(this->tasks.context, *this->application, name, func, builder,
+                                                   timeout, this->logger, config);
+    }
+    else
+    {
+        task = std::make_shared<NoResponseTask>(this->tasks.context, *this->application, name, func, builder, timeout,
+                                                this->logger, config);
+    }
+
+    this->ScheduleAdhocTask(task);
+}
+
+void MContext::ReadFile(const std::string& filename, const FileReadCallbackT& callback, TaskConfig config)
+{
+    auto task = std::make_shared<FileTransferTask>(this->tasks.context, *this->application, filename, callback,
+                                                   this->logger, config);
+    this->ScheduleAdhocTask(task);
+}
+
+void MContext::GetFileInfo(const std::string& filename, const FileInfoCallbackT& callback, TaskConfig config)
+{
+    auto task = std::make_shared<GetFileInfoTask>(this->tasks.context, *this->application, filename, callback,
+                                                  this->logger, config);
+    this->ScheduleAdhocTask(task);
+}
+
+void MContext::DeleteFile(const std::string& filename, const FileOperationCallbackT& callback, TaskConfig config)
+{
+    auto task = std::make_shared<DeleteFileTask>(this->tasks.context, *this->application, filename, callback,
+                                                 this->logger, config);
+    this->ScheduleAdhocTask(task);
+}
+
+void MContext::WriteFile(const std::string& filename,
+                         const std::vector<uint8_t>& data,
+                         FilePermissions permissions,
+                         const FileWriteCallbackT& callback,
+                         TaskConfig config)
+{
+    auto task = std::make_shared<FileWriteTask>(this->tasks.context, *this->application, filename, data, permissions,
+                                                callback, this->logger, config);
+    this->ScheduleAdhocTask(task);
+}
+
+void MContext::ReadDirectory(const std::string& directoryPath,
+                             const DirectoryReadCallbackT& callback,
+                             TaskConfig config)
+{
+    auto task = std::make_shared<ReadDirectoryTask>(this->tasks.context, *this->application, directoryPath, callback,
+                                                    this->logger, config);
+    this->ScheduleAdhocTask(task);
+}
+
+void MContext::AbortFile(uint32_t fileHandle, const FileOperationCallbackT& callback, TaskConfig config)
+{
+    auto task = std::make_shared<AbortFileTask>(this->tasks.context, *this->application, fileHandle, callback,
+                                                this->logger, config);
+    this->ScheduleAdhocTask(task);
+}
+
+void MContext::AuthenticateFile(const std::string& username,
+                                const std::string& password,
+                                const FileAuthCallbackT& callback,
+                                TaskConfig config)
+{
+    auto task = std::make_shared<AuthenticateFileTask>(this->tasks.context, *this->application, username, password,
+                                                       callback, this->logger, config);
+    this->ScheduleAdhocTask(task);
+}
+
+void MContext::WriteDeadBands(const std::vector<Indexed<AnalogInputDeadband>>& deadBands,
+                              const FileOperationCallbackT& callback,
+                              TaskConfig config)
+{
+    auto task = std::make_shared<WriteDeadBandTask>(this->tasks.context, *this->application,
+                                                    std::vector<Indexed<AnalogInputDeadband>>(deadBands), callback,
+                                                    this->logger, config);
+    this->ScheduleAdhocTask(task);
+}
+
 bool MContext::Run(const std::shared_ptr<IMasterTask>& task)
 {
     if (this->activeTask || this->tstate != TaskState::IDLE)
@@ -470,12 +595,20 @@ MContext::TaskState MContext::ResumeActiveTask()
         return TaskState::IDLE;
     }
 
-    this->StartResponseTimer();
     auto apdu = request.ToRSeq();
     this->RecordLastRequest(apdu);
     this->Transmit(apdu);
 
-    return TaskState::WAIT_FOR_RESPONSE;
+    if (this->activeTask->ExpectsResponse())
+    {
+        this->StartResponseTimer();
+        return TaskState::WAIT_FOR_RESPONSE;
+    }
+
+    // No response expected -- complete the task after transmit
+    this->solSeq.Increment();
+    this->CompleteActiveTask();
+    return TaskState::IDLE;
 }
 
 //// --- State tables ---

@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -111,6 +112,16 @@ void PrintingSOEHandler::Process(const HeaderInfo& /*info*/, const ICollection<I
         std::cout << "AnalogCommandEvent: "
                   << "[" << pair.index << "] : " << pair.value.time.value << " : " << pair.value.value << " : "
                   << CommandStatusSpec::to_human_string(pair.value.status) << std::endl;
+    };
+
+    values.ForeachItem(print);
+}
+
+void PrintingSOEHandler::Process(const HeaderInfo& /*info*/, const ICollection<Indexed<AnalogInputDeadband>>& values)
+{
+    auto print = [](const Indexed<AnalogInputDeadband>& pair) {
+        std::cout << "AnalogInputDeadband: "
+                  << "[" << pair.index << "] : " << pair.value.value << std::endl;
     };
 
     values.ForeachItem(print);

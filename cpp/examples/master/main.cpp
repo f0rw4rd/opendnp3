@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -31,8 +32,8 @@ using namespace opendnp3;
 
 class TestSOEHandler : public ISOEHandler
 {
-    virtual void BeginFragment(const ResponseInfo& info){};
-    virtual void EndFragment(const ResponseInfo& info){};
+    virtual void BeginFragment(const ResponseInfo& info) {};
+    virtual void EndFragment(const ResponseInfo& info) {};
 
     virtual void Process(const HeaderInfo& info, const ICollection<Indexed<Binary>>& values) {};
     virtual void Process(const HeaderInfo& info, const ICollection<Indexed<DoubleBitBinary>>& values) {};
@@ -44,7 +45,8 @@ class TestSOEHandler : public ISOEHandler
     virtual void Process(const HeaderInfo& info, const ICollection<Indexed<OctetString>>& values) {};
     virtual void Process(const HeaderInfo& info, const ICollection<Indexed<TimeAndInterval>>& values) {};
     virtual void Process(const HeaderInfo& info, const ICollection<Indexed<BinaryCommandEvent>>& values) {};
-    virtual void Process(const HeaderInfo& info, const ICollection<Indexed<AnalogCommandEvent>>& values) {};    
+    virtual void Process(const HeaderInfo& info, const ICollection<Indexed<AnalogCommandEvent>>& values) {};
+    virtual void Process(const HeaderInfo& info, const ICollection<Indexed<AnalogInputDeadband>>& values) {};
     virtual void Process(const HeaderInfo& info, const ICollection<DNPTime>& values) {};
 };
 
@@ -58,8 +60,8 @@ int main(int argc, char* argv[])
     DNP3Manager manager(1, ConsoleLogger::Create());
 
     // Connect via a TCPClient socket to a outstation
-    auto channel = manager.AddTCPClient("tcpclient", logLevels, ChannelRetry::Default(), {IPEndpoint("127.0.0.1", 20000)},
-                                        "0.0.0.0", PrintingChannelListener::Create());
+    auto channel = manager.AddTCPClient("tcpclient", logLevels, ChannelRetry::Default(),
+                                        {IPEndpoint("127.0.0.1", 20000)}, "0.0.0.0", PrintingChannelListener::Create());
 
     // The master config object for a master. The default are
     // useable, but understanding the options are important.
@@ -90,7 +92,8 @@ int main(int argc, char* argv[])
     auto integrityScan = master->AddClassScan(ClassField::AllClasses(), TimeDuration::Minutes(1), test_soe_handler);
 
     // do a Class 1 exception poll every 5 seconds
-    auto exceptionScan = master->AddClassScan(ClassField(ClassField::CLASS_1), TimeDuration::Seconds(5), test_soe_handler);
+    auto exceptionScan
+        = master->AddClassScan(ClassField(ClassField::CLASS_1), TimeDuration::Seconds(5), test_soe_handler);
 
     // Enable the master. This will start communications.
     master->Enable();
@@ -122,8 +125,7 @@ int main(int argc, char* argv[])
             master->PerformFunction("disable unsol", FunctionCode::DISABLE_UNSOLICITED,
                                     {Header::AllObjects(60, 2), Header::AllObjects(60, 3), Header::AllObjects(60, 4)});
             break;
-        case ('r'):
-        {
+        case ('r'): {
             auto print = [](const RestartOperationResult& result) {
                 if (result.summary == TaskCompletion::SUCCESS)
                 {
@@ -146,22 +148,19 @@ int main(int argc, char* argv[])
         case ('e'):
             exceptionScan->Demand();
             break;
-        case ('c'):
-        {
+        case ('c'): {
             ControlRelayOutputBlock crob(OperationType::LATCH_ON);
             master->SelectAndOperate(crob, 0, PrintingCommandResultCallback::Get());
             break;
         }
-        case ('t'):
-        {
+        case ('t'): {
             channelCommsLoggingEnabled = !channelCommsLoggingEnabled;
             auto levels = channelCommsLoggingEnabled ? levels::ALL_COMMS : levels::NORMAL;
             channel->SetLogFilters(levels);
             std::cout << "Channel logging set to: " << levels.get_value() << std::endl;
             break;
         }
-        case ('u'):
-        {
+        case ('u'): {
             masterCommsLoggingEnabled = !masterCommsLoggingEnabled;
             auto levels = masterCommsLoggingEnabled ? levels::ALL_COMMS : levels::NORMAL;
             master->SetLogFilters(levels);

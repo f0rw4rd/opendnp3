@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -81,6 +82,7 @@ private:
     const std::shared_ptr<exe4cpp::StrandExecutor> executor;
     const std::string adapter;
     SSLContext ctx;
+    std::function<bool(bool, int, const std::string&, const std::string&)> verifyCallback;
     asio::ip::tcp::endpoint localEndpoint;
     asio::ip::tcp::resolver resolver;
 };

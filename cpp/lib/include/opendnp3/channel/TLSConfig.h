@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -21,6 +22,7 @@
 #ifndef OPENDNP3_TLS_CONFIG_H
 #define OPENDNP3_TLS_CONFIG_H
 
+#include <functional>
 #include <string>
 
 namespace opendnp3
@@ -93,6 +95,12 @@ struct TLSConfig
 
     /// openssl format cipher list
     std::string cipherList;
+
+    /// Optional callback for custom TLS certificate verification.
+    /// Arguments: (preverified, depth, subjectName, certDER)
+    /// Return true to accept, false to reject.
+    /// If nullptr (default), standard OpenSSL verification is used.
+    std::function<bool(bool, int, const std::string&, const std::string&)> verifyCallback;
 };
 
 } // namespace opendnp3

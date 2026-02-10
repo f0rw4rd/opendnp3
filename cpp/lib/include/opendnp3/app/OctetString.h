@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -51,7 +52,7 @@ public:
     /**
      * Construct from read-only buffer slice
      *
-     * If the length is 0, the default value of [0x00] is assigned
+     * If the length is 0, an empty octet string is created (size == 0).
      * If the length is > 255, only the first 255 bytes are copied
      */
     OctetString(const Buffer& buffer) : OctetData(buffer) {}

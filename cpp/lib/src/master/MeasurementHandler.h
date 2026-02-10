@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -85,6 +86,7 @@ private:
     IINField ProcessHeader(const RangeHeader& header, const ICollection<Indexed<AnalogOutputStatus>>& values) override;
     IINField ProcessHeader(const RangeHeader& header, const ICollection<Indexed<OctetString>>& values) override;
     IINField ProcessHeader(const RangeHeader& header, const ICollection<Indexed<TimeAndInterval>>& values) override;
+    IINField ProcessHeader(const RangeHeader& header, const ICollection<Indexed<AnalogInputDeadband>>& values) override;
 
     IINField ProcessHeader(const PrefixHeader& header, const ICollection<Indexed<Binary>>& values) override;
     IINField ProcessHeader(const PrefixHeader& header, const ICollection<Indexed<BinaryOutputStatus>>& values) override;
@@ -96,6 +98,8 @@ private:
     IINField ProcessHeader(const PrefixHeader& header, const ICollection<Indexed<OctetString>>& values) override;
     IINField ProcessHeader(const PrefixHeader& header, const ICollection<Indexed<BinaryCommandEvent>>& values) override;
     IINField ProcessHeader(const PrefixHeader& header, const ICollection<Indexed<AnalogCommandEvent>>& values) override;
+    IINField ProcessHeader(const PrefixHeader& header,
+                           const ICollection<Indexed<AnalogInputDeadband>>& values) override;
 
     template<class Target, class Source>
     IINField LoadValuesWithTransformTo(const HeaderRecord& record, const ICollection<Indexed<Source>>& values)
@@ -114,6 +118,14 @@ private:
         HeaderInfo info(record.enumeration, record.GetQualifierCode(), tsquality, record.headerIndex);
         this->pSOEHandler->Process(info, values);
         return IINField();
+    }
+
+    void OnDeviceAttribute(uint8_t set, uint8_t variation, const DeviceAttributeValue& value) override
+    {
+        this->CheckForTxStart();
+        HeaderInfo hdrInfo(GroupVariation::Group0Var0, QualifierCode::UINT8_CNT_UINT16_FREE_FORMAT,
+                           TimestampQuality::INVALID, 0);
+        this->pSOEHandler->OnDeviceAttribute(hdrInfo, set, variation, value);
     }
 
     template<class T> IINField ProcessWithCTO(const HeaderRecord& record, const ICollection<Indexed<T>>& values);

@@ -1,0 +1,10 @@
+include README.md
+include LICENSE
+include NOTICE
+recursive-include python *.cpp *.h
+include python/CMakeLists.txt
+include python/pyproject.toml
+exclude .github
+exclude build*
+exclude .venv
+exclude *.whl

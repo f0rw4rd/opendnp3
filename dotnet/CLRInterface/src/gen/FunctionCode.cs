@@ -11,6 +11,7 @@
 // This file is auto-generated. Do not edit manually
 // 
 // Copyright 2013-2022 Step Function I/O, LLC
+// Modified 2024-2026 f0rw4rd (experimental fork)
 // 
 // Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
 // LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -161,13 +162,17 @@ namespace Automatak.DNP3.Interface
     /// </summary>
     ABORT_FILE = 0x1E,
     /// <summary>
+    /// Outstation shall activate the configuration stored in a file
+    /// </summary>
+    ACTIVATE_CONFIG = 0x1F,
+    /// <summary>
     /// The master uses this function code when sending authentication requests to the outstation
     /// </summary>
     AUTH_REQUEST = 0x20,
     /// <summary>
-    /// The master uses this function code when sending authentication requests to the outstation that do no require acknowledgement
+    /// Authentication error response from the outstation
     /// </summary>
-    AUTH_REQUEST_NO_ACK = 0x21,
+    AUTH_ERROR = 0x21,
     /// <summary>
     /// Master shall interpret this fragment as an Application Layer response to an ApplicationLayer request
     /// </summary>

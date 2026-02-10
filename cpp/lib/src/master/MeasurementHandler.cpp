@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -30,6 +31,11 @@ ParseResult MeasurementHandler::ProcessMeasurements(ResponseInfo info,
                                                     Logger& logger,
                                                     ISOEHandler* pHandler)
 {
+    if (pHandler)
+    {
+        pHandler->OnRawAPDU(info, objects, objects.length());
+    }
+
     MeasurementHandler handler(info, logger, pHandler);
     return APDUParser::Parse(objects, handler, &logger);
 }
@@ -151,6 +157,12 @@ IINField MeasurementHandler::ProcessHeader(const RangeHeader& header,
     return this->LoadValues(header, ModeFromType(header.enumeration), values);
 }
 
+IINField MeasurementHandler::ProcessHeader(const RangeHeader& header,
+                                           const ICollection<Indexed<AnalogInputDeadband>>& values)
+{
+    return this->LoadValues(header, TimestampQuality::INVALID, values);
+}
+
 IINField MeasurementHandler::ProcessHeader(const PrefixHeader& header, const ICollection<Indexed<Binary>>& values)
 {
     if (header.enumeration == GroupVariation::Group2Var3)
@@ -215,6 +227,12 @@ IINField MeasurementHandler::ProcessHeader(const PrefixHeader& header,
                                            const ICollection<Indexed<AnalogCommandEvent>>& values)
 {
     return this->LoadValues(header, ModeFromType(header.enumeration), values);
+}
+
+IINField MeasurementHandler::ProcessHeader(const PrefixHeader& header,
+                                           const ICollection<Indexed<AnalogInputDeadband>>& values)
+{
+    return this->LoadValues(header, TimestampQuality::INVALID, values);
 }
 
 } // namespace opendnp3

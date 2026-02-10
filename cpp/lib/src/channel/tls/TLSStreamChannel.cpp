@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -29,6 +30,8 @@ TLSStreamChannel::TLSStreamChannel(const std::shared_ptr<exe4cpp::StrandExecutor
                                    std::shared_ptr<asio::ssl::stream<asio::ip::tcp::socket>> stream)
     : IAsyncChannel(executor), stream(std::move(stream))
 {
+    std::error_code ec;
+    this->stream->lowest_layer().set_option(asio::ip::tcp::no_delay(true), ec);
 }
 
 void TLSStreamChannel::BeginReadImpl(ser4cpp::wseq_t dest)

@@ -1,30 +1,15 @@
-End-of-Life
+Experimental Fork
 ========
 
-This project will reach end-of-life on September 1st, 2022. On this date:
+This is an experimental fork of opendnp3. The upstream project has reached end-of-life as of September 1st, 2022. This fork is not officially supported and is intended for experimentation and security research only.
 
-1. This repository will be [archived](https://docs.github.com/en/repositories/archiving-a-github-repository/archiving-repositories), making it read-only.
-2. The Google Group will be locked, but will remain publicly searchable.
-3. The project homepage, this README, and group will be updated to indicate that the project is end-of-life.
-
-We will consider bug fixes from the community or support requests from existing customers up until this date.
-
-Please make appropriate plans if you are using this library in production, e.g.:
-
-* Dedicate personnel to maintaining your own internal copy of the library.
-* Consider a commercial library such as the one offered by [Step Function I/O](https://stepfunc.io/products/libraries/dnp3/).
-
-You can read about this decision in these blog posts:
-
-* [OpenDNP3 Retrospective](https://stepfunc.io/blog/opendnp3-retrospective/)
-* [DNP3 1.0.0 (Rust)](https://stepfunc.io/blog/dnp3_1_0_0/)
-
+**For commercial or production use**, please consider [Step Function I/O's DNP3 library](https://stepfunc.io/products/libraries/dnp3/) — a modern, commercially supported Rust implementation of the DNP3 protocol with official C, C++, Java, and .NET bindings.
 
 Overview
 ========
 
-Opendnp3 is a portable, scalable, and rigorously tested implementation 
-of the [DNP3](https//www.dnp.org) protocol stack written in C++11. The library 
+Opendnp3 is a portable, scalable, and rigorously tested implementation
+of the [DNP3](https//www.dnp.org) protocol stack written in C++11. The library
 is designed for high-performance applications like many concurrent TCP
 sessions or huge device simulations. It also embeds with a small footprint on Linux.
 

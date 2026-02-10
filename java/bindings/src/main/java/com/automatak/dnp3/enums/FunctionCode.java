@@ -11,6 +11,7 @@
 // This file is auto-generated. Do not edit manually
 // 
 // Copyright 2013-2022 Step Function I/O, LLC
+// Modified 2024-2026 f0rw4rd (experimental fork)
 // 
 // Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
 // LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -160,13 +161,17 @@ public enum FunctionCode
   */
   ABORT_FILE(0x1E),
   /**
+  * Outstation shall activate the configuration stored in a file
+  */
+  ACTIVATE_CONFIG(0x1F),
+  /**
   * The master uses this function code when sending authentication requests to the outstation
   */
   AUTH_REQUEST(0x20),
   /**
-  * The master uses this function code when sending authentication requests to the outstation that do no require acknowledgement
+  * Authentication error response from the outstation
   */
-  AUTH_REQUEST_NO_ACK(0x21),
+  AUTH_ERROR(0x21),
   /**
   * Master shall interpret this fragment as an Application Layer response to an ApplicationLayer request
   */
@@ -262,10 +267,12 @@ public enum FunctionCode
         return AUTHENTICATE_FILE;
       case(0x1E):
         return ABORT_FILE;
+      case(0x1F):
+        return ACTIVATE_CONFIG;
       case(0x20):
         return AUTH_REQUEST;
       case(0x21):
-        return AUTH_REQUEST_NO_ACK;
+        return AUTH_ERROR;
       case(0x81):
         return RESPONSE;
       case(0x82):

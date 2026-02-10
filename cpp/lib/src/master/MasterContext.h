@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -26,11 +27,14 @@
 #include "master/IMasterScheduler.h"
 #include "master/MasterTasks.h"
 
+#include "opendnp3/app/Indexed.h"
 #include "opendnp3/app/MeasurementTypes.h"
+#include "opendnp3/gen/FreezeType.h"
 #include "opendnp3/gen/RestartType.h"
 #include "opendnp3/logging/Logger.h"
 #include "opendnp3/master/CommandResultCallbackT.h"
 #include "opendnp3/master/CommandSet.h"
+#include "opendnp3/master/FileOperationResult.h"
 #include "opendnp3/master/IMasterApplication.h"
 #include "opendnp3/master/RestartOperationResult.h"
 
@@ -47,7 +51,10 @@ namespace opendnp3
 /*
     All of the mutable state and configuration for a master
 */
-class MContext final : public IUpperLayer, public std::enable_shared_from_this<MContext>, private IMasterTaskRunner, private Uncopyable
+class MContext final : public IUpperLayer,
+                       public std::enable_shared_from_this<MContext>,
+                       private IMasterTaskRunner,
+                       private Uncopyable
 {
 private:
     MContext(const Addresses& addresses,
@@ -67,16 +74,14 @@ public:
         WAIT_FOR_RESPONSE
     };
 
-    static std::shared_ptr<MContext> Create(
-        const Addresses& addresses,
-        const Logger& logger,
-        const std::shared_ptr<exe4cpp::IExecutor>& executor,
-        std::shared_ptr<ILowerLayer> lower,
-        const std::shared_ptr<ISOEHandler>& SOEHandler,
-        const std::shared_ptr<IMasterApplication>& application,
-        std::shared_ptr<IMasterScheduler> scheduler,
-        const MasterParams& params
-    );
+    static std::shared_ptr<MContext> Create(const Addresses& addresses,
+                                            const Logger& logger,
+                                            const std::shared_ptr<exe4cpp::IExecutor>& executor,
+                                            std::shared_ptr<ILowerLayer> lower,
+                                            const std::shared_ptr<ISOEHandler>& SOEHandler,
+                                            const std::shared_ptr<IMasterApplication>& application,
+                                            std::shared_ptr<IMasterScheduler> scheduler,
+                                            const MasterParams& params);
 
     Logger logger;
     const std::shared_ptr<exe4cpp::IExecutor> executor;
@@ -180,6 +185,47 @@ public:
                          FunctionCode func,
                          const HeaderBuilderT& builder,
                          TaskConfig config = TaskConfig::Default());
+
+    void Freeze(FreezeType type, const HeaderBuilderT& builder, TaskConfig config = TaskConfig::Default());
+
+    // ---- File transfer operations ----
+
+    void ReadFile(const std::string& filename,
+                  const FileReadCallbackT& callback,
+                  TaskConfig config = TaskConfig::Default());
+
+    void GetFileInfo(const std::string& filename,
+                     const FileInfoCallbackT& callback,
+                     TaskConfig config = TaskConfig::Default());
+
+    void DeleteFile(const std::string& filename,
+                    const FileOperationCallbackT& callback,
+                    TaskConfig config = TaskConfig::Default());
+
+    void WriteFile(const std::string& filename,
+                   const std::vector<uint8_t>& data,
+                   FilePermissions permissions,
+                   const FileWriteCallbackT& callback,
+                   TaskConfig config = TaskConfig::Default());
+
+    void ReadDirectory(const std::string& directoryPath,
+                       const DirectoryReadCallbackT& callback,
+                       TaskConfig config = TaskConfig::Default());
+
+    void AbortFile(uint32_t fileHandle,
+                   const FileOperationCallbackT& callback,
+                   TaskConfig config = TaskConfig::Default());
+
+    void AuthenticateFile(const std::string& username,
+                          const std::string& password,
+                          const FileAuthCallbackT& callback,
+                          TaskConfig config = TaskConfig::Default());
+
+    // ---- Write dead bands ----
+
+    void WriteDeadBands(const std::vector<Indexed<AnalogInputDeadband>>& deadBands,
+                        const FileOperationCallbackT& callback,
+                        TaskConfig config = TaskConfig::Default());
 
     /// public state manipulation actions
 

@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -60,6 +61,12 @@ EnumAndType GroupVariationRecord::GetEnumAndType(uint8_t group, uint8_t variatio
     {
         switch (group)
         {
+        case (0):
+            if (variation > 0)
+            {
+                enumeration = GroupVariation::Group0Var0;
+            }
+            break;
         case (110):
             enumeration = GroupVariation::Group110Var0;
             break;
@@ -84,6 +91,9 @@ GroupVariationType GroupVariationRecord::GetType(uint8_t group, uint8_t variatio
 {
     switch (group)
     {
+    case (0):
+        return GroupVariationType::STATIC;
+
     case (1):
         return GroupVariationType::STATIC;
 
@@ -120,8 +130,17 @@ GroupVariationType GroupVariationRecord::GetType(uint8_t group, uint8_t variatio
     case (30):
         return GroupVariationType::STATIC;
 
+    case (31):
+        return GroupVariationType::STATIC;
+
     case (32):
         return GroupVariationType::EVENT;
+
+    case (33):
+        return GroupVariationType::EVENT;
+
+    case (34):
+        return GroupVariationType::STATIC;
 
     case (40):
         return GroupVariationType::STATIC;
@@ -152,6 +171,9 @@ GroupVariationType GroupVariationRecord::GetType(uint8_t group, uint8_t variatio
         default:
             return GroupVariationType::EVENT;
         }
+
+    case (102):
+        return GroupVariationType::STATIC;
 
     case (110):
         return GroupVariationType::STATIC;

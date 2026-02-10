@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -27,6 +28,8 @@
 #include "gen/objects/Group22.h"
 #include "gen/objects/Group23.h"
 #include "gen/objects/Group32.h"
+#include "gen/objects/Group33.h"
+#include "gen/objects/Group34.h"
 #include "gen/objects/Group4.h"
 #include "gen/objects/Group41.h"
 #include "gen/objects/Group42.h"
@@ -128,19 +131,35 @@ ParseResult CountIndexParser::ParseCountOfObjects(ser4cpp::rseq_t& buffer,
         return CountIndexParser::From<Group22Var1>(count, numparser).Process(record, buffer, pHandler, pLogger);
     case (GroupVariation::Group22Var2):
         return CountIndexParser::From<Group22Var2>(count, numparser).Process(record, buffer, pHandler, pLogger);
+    case (GroupVariation::Group22Var3):
+        return CountIndexParser::From<Group22Var3>(count, numparser).Process(record, buffer, pHandler, pLogger);
+    case (GroupVariation::Group22Var4):
+        return CountIndexParser::From<Group22Var4>(count, numparser).Process(record, buffer, pHandler, pLogger);
     case (GroupVariation::Group22Var5):
         return CountIndexParser::From<Group22Var5>(count, numparser).Process(record, buffer, pHandler, pLogger);
     case (GroupVariation::Group22Var6):
         return CountIndexParser::From<Group22Var6>(count, numparser).Process(record, buffer, pHandler, pLogger);
+    case (GroupVariation::Group22Var7):
+        return CountIndexParser::From<Group22Var7>(count, numparser).Process(record, buffer, pHandler, pLogger);
+    case (GroupVariation::Group22Var8):
+        return CountIndexParser::From<Group22Var8>(count, numparser).Process(record, buffer, pHandler, pLogger);
 
     case (GroupVariation::Group23Var1):
         return CountIndexParser::From<Group23Var1>(count, numparser).Process(record, buffer, pHandler, pLogger);
     case (GroupVariation::Group23Var2):
         return CountIndexParser::From<Group23Var2>(count, numparser).Process(record, buffer, pHandler, pLogger);
+    case (GroupVariation::Group23Var3):
+        return CountIndexParser::From<Group23Var3>(count, numparser).Process(record, buffer, pHandler, pLogger);
+    case (GroupVariation::Group23Var4):
+        return CountIndexParser::From<Group23Var4>(count, numparser).Process(record, buffer, pHandler, pLogger);
     case (GroupVariation::Group23Var5):
         return CountIndexParser::From<Group23Var5>(count, numparser).Process(record, buffer, pHandler, pLogger);
     case (GroupVariation::Group23Var6):
         return CountIndexParser::From<Group23Var6>(count, numparser).Process(record, buffer, pHandler, pLogger);
+    case (GroupVariation::Group23Var7):
+        return CountIndexParser::From<Group23Var7>(count, numparser).Process(record, buffer, pHandler, pLogger);
+    case (GroupVariation::Group23Var8):
+        return CountIndexParser::From<Group23Var8>(count, numparser).Process(record, buffer, pHandler, pLogger);
 
     case (GroupVariation::Group32Var1):
         return CountIndexParser::From<Group32Var1>(count, numparser).Process(record, buffer, pHandler, pLogger);
@@ -158,6 +177,30 @@ ParseResult CountIndexParser::ParseCountOfObjects(ser4cpp::rseq_t& buffer,
         return CountIndexParser::From<Group32Var7>(count, numparser).Process(record, buffer, pHandler, pLogger);
     case (GroupVariation::Group32Var8):
         return CountIndexParser::From<Group32Var8>(count, numparser).Process(record, buffer, pHandler, pLogger);
+
+    case (GroupVariation::Group33Var1):
+        return CountIndexParser::From<Group33Var1>(count, numparser).Process(record, buffer, pHandler, pLogger);
+    case (GroupVariation::Group33Var2):
+        return CountIndexParser::From<Group33Var2>(count, numparser).Process(record, buffer, pHandler, pLogger);
+    case (GroupVariation::Group33Var3):
+        return CountIndexParser::From<Group33Var3>(count, numparser).Process(record, buffer, pHandler, pLogger);
+    case (GroupVariation::Group33Var4):
+        return CountIndexParser::From<Group33Var4>(count, numparser).Process(record, buffer, pHandler, pLogger);
+    case (GroupVariation::Group33Var5):
+        return CountIndexParser::From<Group33Var5>(count, numparser).Process(record, buffer, pHandler, pLogger);
+    case (GroupVariation::Group33Var6):
+        return CountIndexParser::From<Group33Var6>(count, numparser).Process(record, buffer, pHandler, pLogger);
+    case (GroupVariation::Group33Var7):
+        return CountIndexParser::From<Group33Var7>(count, numparser).Process(record, buffer, pHandler, pLogger);
+    case (GroupVariation::Group33Var8):
+        return CountIndexParser::From<Group33Var8>(count, numparser).Process(record, buffer, pHandler, pLogger);
+
+    case (GroupVariation::Group34Var1):
+        return CountIndexParser::From<Group34Var1>(count, numparser).Process(record, buffer, pHandler, pLogger);
+    case (GroupVariation::Group34Var2):
+        return CountIndexParser::From<Group34Var2>(count, numparser).Process(record, buffer, pHandler, pLogger);
+    case (GroupVariation::Group34Var3):
+        return CountIndexParser::From<Group34Var3>(count, numparser).Process(record, buffer, pHandler, pLogger);
 
     case (GroupVariation::Group41Var1):
         return CountIndexParser::From<Group41Var1>(count, numparser).Process(record, buffer, pHandler, pLogger);
@@ -262,7 +305,7 @@ ParseResult CountIndexParser::ParseIndexPrefixedOctetData(ser4cpp::rseq_t& buffe
 
     if (buffer.length() < TOTAL_SIZE)
     {
-        SIMPLE_LOGGER_BLOCK(pLogger, flags::WARN, "Not enough data for specified bitfield objects");
+        SIMPLE_LOGGER_BLOCK(pLogger, flags::WARN, "Not enough data for specified octet string objects");
         return ParseResult::NOT_ENOUGH_DATA_FOR_OBJECTS;
     }
 

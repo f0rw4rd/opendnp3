@@ -52,6 +52,7 @@ set(unittests_src
     ./TestOutstationFrozenCounters.cpp
     ./TestOutstationStateMachine.cpp
     ./TestOutstationUnsolicitedResponses.cpp
+    ./TestPcapParsing.cpp
     ./TestShiftableBuffer.cpp
 	./TestStaticDataMap.cpp
     ./TestTimeDuration.cpp

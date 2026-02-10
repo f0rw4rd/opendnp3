@@ -1,0 +1,22 @@
+[build-system]
+requires = ["scikit-build-core>=0.5", "pybind11>=2.13"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "opendnp3"
+version = "3.1.2"
+description = "Python bindings for opendnp3 (IEEE-1815 DNP3 protocol)"
+readme = "../README.md"
+license = "Apache-2.0"
+requires-python = ">=3.8"
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[tool.scikit-build]
+cmake.source-dir = ".."
+cmake.args = ["-DDNP3_PYTHON=ON", "-DDNP3_STATIC_LIBS=ON", "-DDNP3_TESTS=OFF"]
+wheel.packages = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

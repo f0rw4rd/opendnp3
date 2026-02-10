@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -39,6 +40,7 @@ TLSClient::TLSClient(const Logger& logger,
       executor(executor),
       adapter(std::move(adapter)),
       ctx(logger, false, config, ec),
+      verifyCallback(config.verifyCallback),
       resolver(*executor->get_context())
 {
 }
@@ -66,6 +68,60 @@ bool TLSClient::BeginConnect(const IPEndpoint& remote, const connect_callback_t&
 
     auto verify = [self = shared_from_this()](bool preverified, asio::ssl::verify_context& ctx) -> bool {
         self->LogVerifyCallback(preverified, ctx);
+        if (self->verifyCallback)
+        {
+            X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
+            if (!cert)
+            {
+                SIMPLE_LOG_BLOCK(self->logger, flags::ERR,
+                                 "verifyCallback: X509_STORE_CTX_get_current_cert returned NULL");
+                return false;
+            }
+            int depth = X509_STORE_CTX_get_error_depth(ctx.native_handle());
+            char subjectName[512];
+            X509_NAME_oneline(X509_get_subject_name(cert), subjectName, 512);
+            unsigned char* der = nullptr;
+            int derLen = i2d_X509(cert, &der);
+            std::string certDER;
+            if (der && derLen > 0)
+            {
+                certDER.assign(reinterpret_cast<const char*>(der), derLen);
+            }
+            OPENSSL_free(der);
+
+            // Snapshot error message inside try block where the GIL may still
+            // be held by the caller (pybind11 wrapper).  After stack unwinding
+            // the GIL is released, so we must NOT call ex.what() or any Python
+            // API in the catch handler — only use the pre-captured string.
+            std::string errorMsg;
+            try
+            {
+                return self->verifyCallback(preverified, depth, std::string(subjectName), certDER);
+            }
+            catch (const std::exception& ex)
+            {
+                // Capture the message NOW while the GIL may still be held
+                // by the pybind11 lambda that wraps the Python callback.
+                // NOTE: for py::error_already_set, what() fetches and clears
+                // the Python error — safe here because pybind11's
+                // gil_scoped_acquire is still alive at the throw site.
+                // However, stack unwinding destroys it before we reach this
+                // catch block, so what() is only safe for non-Python exceptions.
+                // Use a fixed message to be safe in all cases.
+                errorMsg = "verifyCallback threw exception";
+            }
+            catch (...)
+            {
+                errorMsg = "verifyCallback threw unknown exception";
+            }
+            // Log AFTER the catch — errorMsg is a plain std::string, no
+            // Python API calls needed.  If the log handler is a Python
+            // trampoline, FORMAT_LOG_BLOCK might call into Python without
+            // the GIL, but that is a pre-existing issue with all logging
+            // on ASIO threads and is not specific to this code path.
+            SIMPLE_LOG_BLOCK(self->logger, flags::ERR, errorMsg.c_str());
+            return false;
+        }
         return preverified;
     };
 
@@ -133,7 +189,14 @@ void TLSClient::LogVerifyCallback(bool preverified, asio::ssl::verify_context& c
     // lookup the subject name
     X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
     char subjectName[MAX_SUBJECT_NAME];
-    X509_NAME_oneline(X509_get_subject_name(cert), subjectName, MAX_SUBJECT_NAME);
+    if (cert)
+    {
+        X509_NAME_oneline(X509_get_subject_name(cert), subjectName, MAX_SUBJECT_NAME);
+    }
+    else
+    {
+        snprintf(subjectName, MAX_SUBJECT_NAME, "(no certificate)");
+    }
 
     if (preverified)
     {

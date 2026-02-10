@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -37,6 +38,7 @@
 #include "opendnp3/link/Addresses.h"
 #include "opendnp3/logging/Logger.h"
 #include "opendnp3/outstation/ICommandHandler.h"
+#include "opendnp3/outstation/IFileHandler.h"
 #include "opendnp3/outstation/IOutstationApplication.h"
 #include "opendnp3/outstation/OutstationConfig.h"
 
@@ -66,7 +68,8 @@ public:
              const std::shared_ptr<exe4cpp::IExecutor>& executor,
              std::shared_ptr<ILowerLayer> lower,
              std::shared_ptr<ICommandHandler> commandHandler,
-             std::shared_ptr<IOutstationApplication> application);
+             std::shared_ptr<IOutstationApplication> application,
+             std::shared_ptr<IFileHandler> fileHandler = nullptr);
 
     /// ----- Implement IUpperLayer ------
 
@@ -159,6 +162,12 @@ private:
     /// @return an IIN field and a partial AppControlField (missing sequence info)
     ser4cpp::Pair<IINField, AppControlField> HandleRead(const ser4cpp::rseq_t& objects, HeaderWriter& writer);
 
+    /// Check if a READ request contains Group70 objects (file block read)
+    bool IsFileReadRequest(const ser4cpp::rseq_t& objects);
+
+    /// Handle a READ request that contains Group70Var5 (file block read)
+    IINField HandleFileRead(const ser4cpp::rseq_t& objects, HeaderWriter& writer);
+
     // ------ Function Handlers ------
 
     IINField HandleWrite(const ser4cpp::rseq_t& objects);
@@ -175,6 +184,36 @@ private:
     IINField HandleFreeze(const ser4cpp::rseq_t& objects);
     IINField HandleFreezeAndClear(const ser4cpp::rseq_t& objects);
 
+    // ------ File transfer function handlers ------
+    IINField HandleOpenFile(const ser4cpp::rseq_t& objects, HeaderWriter& writer);
+    IINField HandleCloseFile(const ser4cpp::rseq_t& objects, HeaderWriter& writer);
+    IINField HandleDeleteFile(const ser4cpp::rseq_t& objects, HeaderWriter& writer);
+    IINField HandleGetFileInfo(const ser4cpp::rseq_t& objects, HeaderWriter& writer);
+    IINField HandleAuthenticateFile(const ser4cpp::rseq_t& objects, HeaderWriter& writer);
+    IINField HandleAbortFile(const ser4cpp::rseq_t& objects, HeaderWriter& writer);
+
+    /// Check if a WRITE request contains Group70Var5 (file block write)
+    bool IsFileWriteRequest(const ser4cpp::rseq_t& objects);
+
+    /// Handle a WRITE request that contains Group70Var5 (file block write)
+    IINField HandleFileWrite(const ser4cpp::rseq_t& objects, HeaderWriter& writer);
+
+    // Helper: write Group70 free-format objects into writer
+    bool WriteGroup70Var4Response(HeaderWriter& writer,
+                                  uint32_t fileHandle,
+                                  uint32_t fileSize,
+                                  uint16_t maxBlockSize,
+                                  uint16_t requestId,
+                                  FileStatus status);
+    bool WriteGroup70Var5Response(HeaderWriter& writer,
+                                  uint32_t fileHandle,
+                                  uint32_t blockNum,
+                                  bool lastBlock,
+                                  const uint8_t* data,
+                                  size_t dataLen);
+    bool WriteGroup70Var6Response(HeaderWriter& writer, uint32_t fileHandle, uint32_t blockNum, FileStatus status);
+    bool WriteGroup70Var7Response(HeaderWriter& writer, const FileInfo& info);
+
     // ------ resources --------
     const Addresses addresses;
     Logger logger;
@@ -182,6 +221,7 @@ private:
     const std::shared_ptr<ILowerLayer> lower;
     const std::shared_ptr<ICommandHandler> commandHandler;
     const std::shared_ptr<IOutstationApplication> application;
+    const std::shared_ptr<IFileHandler> fileHandler;
 
     // ------ Database, event buffer, and response tracking
     EventBuffer eventBuffer;

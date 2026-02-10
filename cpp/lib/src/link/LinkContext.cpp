@@ -291,11 +291,39 @@ void LinkContext::FailKeepAlive(bool timeout)
     {
         this->listener->OnKeepAliveFailure();
     }
+    if (this->userLinkStatusCallback)
+    {
+        auto cb = std::move(this->userLinkStatusCallback);
+        this->userLinkStatusCallback = nullptr;
+        cb(false);
+    }
 }
 
 void LinkContext::CompleteKeepAlive()
 {
     this->listener->OnKeepAliveSuccess();
+    if (this->userLinkStatusCallback)
+    {
+        auto cb = std::move(this->userLinkStatusCallback);
+        this->userLinkStatusCallback = nullptr;
+        cb(true);
+    }
+}
+
+void LinkContext::TriggerLinkStatusCheck(std::function<void(bool)> callback)
+{
+    if (!this->isOnline)
+    {
+        if (callback)
+        {
+            callback(false);
+        }
+        return;
+    }
+
+    this->userLinkStatusCallback = std::move(callback);
+    this->keepAliveTimeout = true;
+    this->TryStartTransmission();
 }
 
 bool LinkContext::OnFrame(const LinkHeaderFields& header, const ser4cpp::rseq_t& userdata)
@@ -331,11 +359,12 @@ bool LinkContext::OnFrame(const LinkHeaderFields& header, const ser4cpp::rseq_t&
 
     // Broadcast addresses can only be used for sending data.
     // If confirmed data is used, no response is sent back.
-    if (header.addresses.IsBroadcast() &&
-        !(header.func == LinkFunction::PRI_UNCONFIRMED_USER_DATA || header.func == LinkFunction::PRI_CONFIRMED_USER_DATA))
+    if (header.addresses.IsBroadcast()
+        && !(header.func == LinkFunction::PRI_UNCONFIRMED_USER_DATA
+             || header.func == LinkFunction::PRI_CONFIRMED_USER_DATA))
     {
         FORMAT_LOG_BLOCK(logger, flags::WARN, "Received invalid function (%s) with broadcast destination address",
-                            LinkFunctionSpec::to_string(header.func));
+                         LinkFunctionSpec::to_string(header.func));
         ++statistics.numUnexpectedFrame;
         return false;
     }
@@ -367,8 +396,9 @@ bool LinkContext::OnFrame(const LinkHeaderFields& header, const ser4cpp::rseq_t&
         pSecState = &pSecState->OnRequestLinkStatus(*this, header.addresses.source);
         break;
     case (LinkFunction::PRI_CONFIRMED_USER_DATA):
-        pSecState = &pSecState->OnConfirmedUserData(*this, header.addresses.source, header.fcb, header.addresses.IsBroadcast(),
-                                                    Message(header.addresses, userdata));
+        pSecState
+            = &pSecState->OnConfirmedUserData(*this, header.addresses.source, header.fcb,
+                                              header.addresses.IsBroadcast(), Message(header.addresses, userdata));
         break;
     case (LinkFunction::PRI_UNCONFIRMED_USER_DATA):
         this->PushDataUp(Message(header.addresses, userdata));

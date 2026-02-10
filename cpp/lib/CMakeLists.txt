@@ -14,6 +14,7 @@ set(opendnp3_public_headers
     ./include/opendnp3/app/BinaryCommandEvent.h
     ./include/opendnp3/app/ClassField.h
     ./include/opendnp3/app/ControlRelayOutputBlock.h
+    ./include/opendnp3/app/DeviceAttributes.h
     ./include/opendnp3/app/DNPTime.h
     ./include/opendnp3/app/EventCells.h
     ./include/opendnp3/app/EventTriggers.h
@@ -67,6 +68,7 @@ set(opendnp3_public_headers
     ./include/opendnp3/gen/FlagsType.h
     ./include/opendnp3/gen/FlowControl.h
     ./include/opendnp3/gen/FrozenCounterQuality.h
+    ./include/opendnp3/gen/FreezeType.h
     ./include/opendnp3/gen/FunctionCode.h
     ./include/opendnp3/gen/GroupVariation.h
     ./include/opendnp3/gen/IndexQualifierMode.h
@@ -110,6 +112,7 @@ set(opendnp3_public_headers
     ./include/opendnp3/logging/Logger.h
 
     ./include/opendnp3/master/CommandPointResult.h
+    ./include/opendnp3/master/FileOperationResult.h
     ./include/opendnp3/master/CommandResultCallbackT.h
     ./include/opendnp3/master/CommandSet.h
     ./include/opendnp3/master/DefaultListenCallbacks.h
@@ -144,6 +147,7 @@ set(opendnp3_public_headers
     ./include/opendnp3/outstation/EventBufferConfig.h
     ./include/opendnp3/outstation/ICommandHandler.h
     ./include/opendnp3/outstation/IDnpTimeSource.h
+    ./include/opendnp3/outstation/IFileHandler.h
     ./include/opendnp3/outstation/IOutstation.h
     ./include/opendnp3/outstation/IOutstationApplication.h
     ./include/opendnp3/outstation/IUpdateHandler.h
@@ -211,6 +215,7 @@ set(opendnp3_private_headers
     ./src/app/parsing/CountIndexParser.h
     ./src/app/parsing/CountParser.h
     ./src/app/parsing/DNPTimeParsing.h
+    ./src/app/parsing/FreeFormatParser.h
     ./src/app/parsing/Functions.h
     ./src/app/parsing/IAPDUHandler.h
     ./src/app/parsing/IWhiteList.h
@@ -269,7 +274,10 @@ set(opendnp3_private_headers
     ./src/gen/objects/Group22.h
     ./src/gen/objects/Group23.h
     ./src/gen/objects/Group30.h
+    ./src/gen/objects/Group31.h
     ./src/gen/objects/Group32.h
+    ./src/gen/objects/Group33.h
+    ./src/gen/objects/Group34.h
     ./src/gen/objects/Group40.h
     ./src/gen/objects/Group41.h
     ./src/gen/objects/Group42.h
@@ -280,6 +288,7 @@ set(opendnp3_private_headers
     ./src/gen/objects/Group60.h
     ./src/gen/objects/Group70.h
     ./src/gen/objects/Group80.h
+    ./src/gen/objects/Group102.h
     ./src/gen/objects/Group110.h
     ./src/gen/objects/Group111.h
     ./src/gen/objects/Group112.h
@@ -310,10 +319,17 @@ set(opendnp3_private_headers
     ./src/logging/LogMacros.h
     ./src/logging/Strings.h
 
+    ./src/master/AbortFileTask.h
     ./src/master/AssignClassTask.h
+    ./src/master/AuthenticateFileTask.h
     ./src/master/ClearRestartTask.h
     ./src/master/CommandSetOps.h
     ./src/master/CommandTask.h
+    ./src/master/DeleteFileTask.h
+    ./src/master/FileTransferTask.h
+    ./src/master/FileWriteTask.h
+    ./src/master/GetFileInfoTask.h
+    ./src/master/ReadDirectoryTask.h
     ./src/master/CommandTaskResult.h
     ./src/master/DisableUnsolicitedTask.h
     ./src/master/EmptyResponseTask.h
@@ -334,6 +350,7 @@ set(opendnp3_private_headers
     ./src/master/MasterTasks.h
     ./src/master/MasterTCPServer.h
     ./src/master/MeasurementHandler.h
+    ./src/master/NoResponseTask.h
     ./src/master/PollTaskBase.h
     ./src/master/RestartOperationTask.h
     ./src/master/ScanResult.h
@@ -345,6 +362,7 @@ set(opendnp3_private_headers
     ./src/master/TimeSyncHandler.h
     ./src/master/TypedCommandHeader.h
     ./src/master/UserPollTask.h
+    ./src/master/WriteDeadBandTask.h
 
     ./src/outstation/AssignClassHandler.h
 	./src/outstation/StaticDataCell.h
@@ -441,6 +459,7 @@ set(opendnp3_src
     ./src/app/parsing/BitReader.cpp
     ./src/app/parsing/CountIndexParser.cpp
     ./src/app/parsing/CountParser.cpp
+    ./src/app/parsing/FreeFormatParser.cpp
     ./src/app/parsing/IAPDUHandler.cpp
     ./src/app/parsing/NumParser.cpp
     ./src/app/parsing/ObjectHeaderParser.cpp
@@ -535,7 +554,10 @@ set(opendnp3_src
     ./src/gen/objects/Group22.cpp
     ./src/gen/objects/Group23.cpp
     ./src/gen/objects/Group30.cpp
+    ./src/gen/objects/Group31.cpp
     ./src/gen/objects/Group32.cpp
+    ./src/gen/objects/Group33.cpp
+    ./src/gen/objects/Group34.cpp
     ./src/gen/objects/Group40.cpp
     ./src/gen/objects/Group41.cpp
     ./src/gen/objects/Group42.cpp
@@ -543,6 +565,7 @@ set(opendnp3_src
     ./src/gen/objects/Group50.cpp
     ./src/gen/objects/Group51.cpp
     ./src/gen/objects/Group52.cpp
+    ./src/gen/objects/Group102.cpp
 
     ./src/link/Addresses.cpp
     ./src/link/CRC.cpp
@@ -559,12 +582,19 @@ set(opendnp3_src
 
     ./src/logging/LogLevels.cpp
 
+    ./src/master/AbortFileTask.cpp
     ./src/master/AssignClassTask.cpp
+    ./src/master/AuthenticateFileTask.cpp
     ./src/master/ClearRestartTask.cpp
     ./src/master/CommandSet.cpp
     ./src/master/CommandSetOps.cpp
     ./src/master/CommandTask.cpp
     ./src/master/CommandTaskResult.cpp
+    ./src/master/DeleteFileTask.cpp
+    ./src/master/FileTransferTask.cpp
+    ./src/master/FileWriteTask.cpp
+    ./src/master/GetFileInfoTask.cpp
+    ./src/master/ReadDirectoryTask.cpp
     ./src/master/DefaultListenCallbacks.cpp
     ./src/master/DefaultMasterApplication.cpp
     ./src/master/DisableUnsolicitedTask.cpp
@@ -583,6 +613,7 @@ set(opendnp3_src
     ./src/master/MasterTasks.cpp
     ./src/master/MasterTCPServer.cpp
     ./src/master/MeasurementHandler.cpp
+    ./src/master/NoResponseTask.cpp
     ./src/master/PollTaskBase.cpp
     ./src/master/PrintingCommandResultCallback.cpp
     ./src/master/PrintingSOEHandler.cpp
@@ -592,6 +623,7 @@ set(opendnp3_src
     ./src/master/TaskBehavior.cpp
     ./src/master/TaskContext.cpp
     ./src/master/UserPollTask.cpp
+    ./src/master/WriteDeadBandTask.cpp
 
     ./src/outstation/ApplicationIIN.cpp
     ./src/outstation/AssignClassHandler.cpp

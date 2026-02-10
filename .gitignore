@@ -162,3 +162,20 @@ cpp/demos/cover_html/
 
 # VS Code
 .vscode/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.so
+*.egg-info/
+dist/
+
+# AI files
+CLAUDE.md
+.claude/
+.cursorrules
+.cursorignore
+.aider*
+.github/copilot*
+copilot-*

@@ -37,6 +37,7 @@
 
 #include <exe4cpp/IExecutor.h>
 
+#include <functional>
 #include <memory>
 
 namespace opendnp3
@@ -109,6 +110,9 @@ public:
     void CancelTimer();
     void FailKeepAlive(bool timeout);
     void CompleteKeepAlive();
+
+    /// Manually trigger REQUEST_LINK_STATUS with a one-shot callback
+    void TriggerLinkStatusCheck(std::function<void(bool)> callback);
     bool OnFrame(const LinkHeaderFields& header, const ser4cpp::rseq_t& userdata);
     bool TryPendingTx(ser4cpp::Settable<ser4cpp::rseq_t>& pending, bool primary);
 
@@ -131,6 +135,7 @@ public:
     bool nextReadFCB;
     bool isOnline;
     bool keepAliveTimeout;
+    std::function<void(bool)> userLinkStatusCallback;
     Timestamp lastMessageTimestamp;
     StackStatistics::Link statistics;
 

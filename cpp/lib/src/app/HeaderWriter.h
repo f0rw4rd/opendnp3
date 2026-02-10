@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -44,6 +45,8 @@ class HeaderWriter
 
 public:
     bool WriteHeader(GroupVariationID id, QualifierCode qc);
+
+    bool WriteRawBytes(const uint8_t* data, size_t length);
 
     template<class IndexType, class WriteType>
     RangeWriteIterator<IndexType, WriteType> IterateOverRange(QualifierCode qc,

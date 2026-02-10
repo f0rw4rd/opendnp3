@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2022 Step Function I/O, LLC
+ * Modified 2024-2026 f0rw4rd (experimental fork)
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
  * LLC (https://stepfunc.io) under one or more contributor license agreements.
@@ -104,6 +105,38 @@ public:
                          FunctionCode func,
                          const std::vector<Header>& headers,
                          const TaskConfig& config) final;
+    void Freeze(FreezeType type, const std::vector<Header>& headers, const TaskConfig& config) final;
+
+    void ReadFile(const std::string& filename, const FileReadCallbackT& callback, const TaskConfig& config) final;
+
+    void GetFileInfo(const std::string& filename, const FileInfoCallbackT& callback, const TaskConfig& config) final;
+
+    void DeleteFile(const std::string& filename,
+                    const FileOperationCallbackT& callback,
+                    const TaskConfig& config) final;
+
+    void WriteFile(const std::string& filename,
+                   const std::vector<uint8_t>& data,
+                   FilePermissions permissions,
+                   const FileWriteCallbackT& callback,
+                   const TaskConfig& config) final;
+
+    void ReadDirectory(const std::string& directoryPath,
+                       const DirectoryReadCallbackT& callback,
+                       const TaskConfig& config) final;
+
+    void AbortFile(uint32_t fileHandle, const FileOperationCallbackT& callback, const TaskConfig& config) final;
+
+    void AuthenticateFile(const std::string& username,
+                          const std::string& password,
+                          const FileAuthCallbackT& callback,
+                          const TaskConfig& config) final;
+
+    void WriteDeadBands(const std::vector<Indexed<AnalogInputDeadband>>& deadBands,
+                        const FileOperationCallbackT& callback,
+                        const TaskConfig& config) final;
+
+    void CheckLinkStatus(const std::function<void(bool)>& callback) final;
 
     /// --- ICommandProcessor ---
 
