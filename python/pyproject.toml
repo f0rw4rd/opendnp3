@@ -8,7 +8,7 @@ version = "3.1.2"
 description = "Python bindings for opendnp3 (IEEE-1815 DNP3 protocol)"
 readme = "../README.md"
 license = "Apache-2.0"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 
 [project.optional-dependencies]
 test = ["pytest>=7"]
@@ -16,7 +16,20 @@ test = ["pytest>=7"]
 [tool.scikit-build]
 cmake.source-dir = ".."
 cmake.args = ["-DDNP3_PYTHON=ON", "-DDNP3_STATIC_LIBS=ON", "-DDNP3_TESTS=OFF"]
-wheel.packages = []
+install.components = ["python"]
+wheel.packages = ["../opendnp3"]
+
+[tool.cibuildwheel]
+build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
+skip = "*-win32 *-musllinux*"
+test-command = 'python -c "import opendnp3; m = opendnp3.DNP3Manager(1); m.Shutdown(); print(\"OK\")"'
+
+[tool.cibuildwheel.linux]
+manylinux-x86_64-image = "manylinux_2_28"
+before-build = "yum install -y openssl-devel"
+
+[tool.cibuildwheel.windows]
+before-build = "choco install --no-progress openssl"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

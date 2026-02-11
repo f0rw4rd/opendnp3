@@ -18,3 +18,9 @@ target_include_directories(opendnp3_python PRIVATE
     ${CMAKE_SOURCE_DIR}/cpp/lib/include
     ${CMAKE_SOURCE_DIR}/cpp/lib/src
 )
+
+install(TARGETS opendnp3_python
+    COMPONENT python
+    LIBRARY DESTINATION opendnp3
+    RUNTIME DESTINATION opendnp3
+)
