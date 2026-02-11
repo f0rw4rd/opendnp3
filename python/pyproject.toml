@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "opendnp3"
-version = "3.1.2"
+version = "3.1.2.1"
 description = "Python bindings for opendnp3 (IEEE-1815 DNP3 protocol)"
 readme = "../README.md"
 license = "Apache-2.0"

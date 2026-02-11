@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Verify python/pyproject.toml version matches version.py output
+set -e
+
+ROOT="$(git rev-parse --show-toplevel)"
+PYPROJECT_VER=$(grep -Po '(?<=^version = ")[^"]+' "$ROOT/python/pyproject.toml")
+VERSION_PY_VER=$(python3 "$ROOT/version.py")
+
+if [ "$PYPROJECT_VER" != "$VERSION_PY_VER" ]; then
+    echo "ERROR: version mismatch"
+    echo "  python/pyproject.toml: $PYPROJECT_VER"
+    echo "  version.py:            $VERSION_PY_VER"
+    echo "  Update one to match the other."
+    exit 1
+fi
