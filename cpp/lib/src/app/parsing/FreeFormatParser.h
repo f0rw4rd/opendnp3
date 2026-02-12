@@ -43,10 +43,44 @@ public:
                                    IAPDUHandler* pHandler);
 
 private:
+    // Handler function type for Group120 free-format objects
+    typedef bool (&FreeFormatHandler)(const FreeFormatHeader& header,
+                                      const ser4cpp::rseq_t& objects,
+                                      IAPDUHandler* pHandler);
+
+    // Template that parses a single Group120 variable-length object and delivers it to the handler
+    template<class T>
+    static bool ParseAny(const FreeFormatHeader& header, const ser4cpp::rseq_t& object, IAPDUHandler* pHandler)
+    {
+        T value;
+        auto success = value.Read(object);
+        if (success && pHandler)
+        {
+            pHandler->OnHeader(header, value, object);
+        }
+        return success;
+    }
+
+    static ParseResult ParseFreeFormat(FreeFormatHandler parser,
+                                       const FreeFormatHeader& header,
+                                       uint16_t size,
+                                       ser4cpp::rseq_t& objects,
+                                       IAPDUHandler* pHandler,
+                                       Logger* pLogger);
+
+    static ParseResult ParseGroup120(ser4cpp::rseq_t& buffer,
+                                     const ParserSettings& settings,
+                                     const HeaderRecord& record,
+                                     Logger* pLogger,
+                                     IAPDUHandler* pHandler);
+
     static ParseResult ParseFreeFormatObjects(
         ser4cpp::rseq_t& buffer, const HeaderRecord& record, uint16_t count, Logger* pLogger, IAPDUHandler* pHandler);
 
     static ParseResult ParseGroup70Objects(
+        ser4cpp::rseq_t& buffer, const HeaderRecord& record, uint16_t count, Logger* pLogger, IAPDUHandler* pHandler);
+
+    static ParseResult ParseDataSetObjects(
         ser4cpp::rseq_t& buffer, const HeaderRecord& record, uint16_t count, Logger* pLogger, IAPDUHandler* pHandler);
 
     static void LogGroup70Var2(ser4cpp::rseq_t data, Logger* pLogger);

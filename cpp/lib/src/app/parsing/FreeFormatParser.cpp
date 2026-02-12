@@ -41,6 +41,12 @@ ParseResult FreeFormatParser::ParseHeader(ser4cpp::rseq_t& buffer,
                                           Logger* pLogger,
                                           IAPDUHandler* pHandler)
 {
+    // Group 120 (authentication) uses a single-object format: count(1) + size(2) + data
+    if (record.group == 120)
+    {
+        return ParseGroup120(buffer, settings, record, pLogger, pHandler);
+    }
+
     // Free-format qualifier 0x5B: 1-byte count, then per object: 2-byte length + data
     if (buffer.length() < 1)
     {
@@ -66,6 +72,112 @@ ParseResult FreeFormatParser::ParseHeader(ser4cpp::rseq_t& buffer,
     }
 
     return ParseResult::OK;
+}
+
+ParseResult FreeFormatParser::ParseGroup120(ser4cpp::rseq_t& buffer,
+                                            const ParserSettings& settings,
+                                            const HeaderRecord& record,
+                                            Logger* pLogger,
+                                            IAPDUHandler* pHandler)
+{
+    if (buffer.length() < 3)
+    {
+        SIMPLE_LOGGER_BLOCK(pLogger, flags::WARN, "Not enough data for free format count and size");
+        return ParseResult::NOT_ENOUGH_DATA_FOR_HEADER;
+    }
+
+    uint8_t freeFormatCount;
+    ser4cpp::UInt8::read_from(buffer, freeFormatCount);
+    uint16_t freeFormatSize;
+    ser4cpp::UInt16::read_from(buffer, freeFormatSize);
+
+    FORMAT_LOGGER_BLOCK(pLogger, settings.LoggingLevel(), "%03u,%03u %s, %s, count: %u size: %u", record.group,
+                        record.variation, GroupVariationSpec::to_human_string(record.enumeration),
+                        QualifierCodeSpec::to_human_string(record.GetQualifierCode()), freeFormatCount, freeFormatSize);
+
+    if (freeFormatCount != 1)
+    {
+        FORMAT_LOGGER_BLOCK(pLogger, flags::WARN, "Unsupported free-format count of %u", freeFormatCount);
+        return ParseResult::UNREASONABLE_OBJECT_COUNT;
+    }
+
+    if (buffer.length() < freeFormatSize)
+    {
+        FORMAT_LOGGER_BLOCK(pLogger, flags::WARN, "Insufficient data (%zu) for free format object of size (%u)",
+                            buffer.length(), freeFormatSize);
+        return ParseResult::NOT_ENOUGH_DATA_FOR_OBJECTS;
+    }
+
+    ser4cpp::rseq_t copy(buffer.take(freeFormatSize));
+    buffer.advance(freeFormatSize);
+
+    FreeFormatHeader header(record, freeFormatCount);
+
+    switch (record.enumeration)
+    {
+    case (GroupVariation::Group120Var1):
+        return ParseFreeFormat(ParseAny<Group120Var1>, header, freeFormatSize, copy, pHandler, pLogger);
+
+    case (GroupVariation::Group120Var2):
+        return ParseFreeFormat(ParseAny<Group120Var2>, header, freeFormatSize, copy, pHandler, pLogger);
+
+    case (GroupVariation::Group120Var5):
+        return ParseFreeFormat(ParseAny<Group120Var5>, header, freeFormatSize, copy, pHandler, pLogger);
+
+    case (GroupVariation::Group120Var6):
+        return ParseFreeFormat(ParseAny<Group120Var6>, header, freeFormatSize, copy, pHandler, pLogger);
+
+    case (GroupVariation::Group120Var7):
+        return ParseFreeFormat(ParseAny<Group120Var7>, header, freeFormatSize, copy, pHandler, pLogger);
+
+    case (GroupVariation::Group120Var8):
+        return ParseFreeFormat(ParseAny<Group120Var8>, header, freeFormatSize, copy, pHandler, pLogger);
+
+    case (GroupVariation::Group120Var9):
+        return ParseFreeFormat(ParseAny<Group120Var9>, header, freeFormatSize, copy, pHandler, pLogger);
+
+    case (GroupVariation::Group120Var10):
+        return ParseFreeFormat(ParseAny<Group120Var10>, header, freeFormatSize, copy, pHandler, pLogger);
+
+    case (GroupVariation::Group120Var11):
+        return ParseFreeFormat(ParseAny<Group120Var11>, header, freeFormatSize, copy, pHandler, pLogger);
+
+    case (GroupVariation::Group120Var12):
+        return ParseFreeFormat(ParseAny<Group120Var12>, header, freeFormatSize, copy, pHandler, pLogger);
+
+    case (GroupVariation::Group120Var13):
+        return ParseFreeFormat(ParseAny<Group120Var13>, header, freeFormatSize, copy, pHandler, pLogger);
+
+    case (GroupVariation::Group120Var14):
+        return ParseFreeFormat(ParseAny<Group120Var14>, header, freeFormatSize, copy, pHandler, pLogger);
+
+    case (GroupVariation::Group120Var15):
+        return ParseFreeFormat(ParseAny<Group120Var15>, header, freeFormatSize, copy, pHandler, pLogger);
+
+    default:
+        FORMAT_LOGGER_BLOCK(pLogger, flags::WARN, "Unsupported qualifier/object - %s - %i / %i",
+                            QualifierCodeSpec::to_human_string(record.GetQualifierCode()), record.group,
+                            record.variation);
+
+        return ParseResult::INVALID_OBJECT_QUALIFIER;
+    }
+}
+
+ParseResult FreeFormatParser::ParseFreeFormat(FreeFormatHandler parser,
+                                              const FreeFormatHeader& header,
+                                              uint16_t /*size*/,
+                                              ser4cpp::rseq_t& objects,
+                                              IAPDUHandler* pHandler,
+                                              Logger* pLogger)
+{
+    if (parser(header, objects, pHandler))
+    {
+        return ParseResult::OK;
+    }
+
+    FORMAT_LOGGER_BLOCK(pLogger, flags::WARN, "Insufficient data for free-format object: (%i, %i)", header.group,
+                        header.variation);
+    return ParseResult::NOT_ENOUGH_DATA_FOR_OBJECTS;
 }
 
 ParseResult FreeFormatParser::ParseFreeFormatObjects(
@@ -115,6 +227,12 @@ ParseResult FreeFormatParser::ParseFreeFormatObjects(
     }
     case (70): {
         return ParseGroup70Objects(buffer, record, count, pLogger, pHandler);
+    }
+    case (85):
+    case (86):
+    case (87):
+    case (88): {
+        return ParseDataSetObjects(buffer, record, count, pLogger, pHandler);
     }
     default: {
         // Generic free-format handling for other groups
@@ -483,6 +601,8 @@ const char* FreeFormatParser::GetAttrDataTypeName(uint8_t typeCode)
         return "BitString";
     case 7:
         return "DNP3Time";
+    case 8:
+        return "Unicode";
     case 254:
         return "AttrList";
     case 255:
@@ -648,6 +768,18 @@ void FreeFormatParser::LogDeviceAttribute(ser4cpp::rseq_t data, uint8_t variatio
         }
         break;
     }
+    case 8: // Unicode
+    {
+        char strBuf[256] = {0};
+        const auto len = std::min(static_cast<size_t>(payloadLen), static_cast<size_t>(255));
+        if (len > 0)
+        {
+            std::memcpy(strBuf, data, len);
+        }
+        FORMAT_LOGGER_BLOCK(pLogger, flags::APP_OBJECT_RX, "Group0Var%u DeviceAttribute - type: Unicode, value: \"%s\"",
+                            variation, strBuf);
+        break;
+    }
     case 254: // AttrList
     case 255: // ExtAttrList
     {
@@ -666,6 +798,87 @@ void FreeFormatParser::LogDeviceAttribute(ser4cpp::rseq_t data, uint8_t variatio
         break;
     }
     }
+}
+
+ParseResult FreeFormatParser::ParseDataSetObjects(
+    ser4cpp::rseq_t& buffer, const HeaderRecord& record, uint16_t count, Logger* pLogger, IAPDUHandler* pHandler)
+{
+    for (uint16_t i = 0; i < count; ++i)
+    {
+        if (buffer.length() < 2)
+        {
+            SIMPLE_LOGGER_BLOCK(pLogger, flags::WARN, "Not enough data for free-format object length");
+            return ParseResult::NOT_ENOUGH_DATA_FOR_OBJECTS;
+        }
+
+        uint16_t dataLen = 0;
+        ser4cpp::LittleEndian::read(buffer, dataLen);
+
+        if (buffer.length() < dataLen)
+        {
+            SIMPLE_LOGGER_BLOCK(pLogger, flags::WARN, "Not enough data for data set object data");
+            return ParseResult::NOT_ENOUGH_DATA_FOR_OBJECTS;
+        }
+
+        const auto dataSlice = buffer.take(dataLen);
+
+        // Log the data set object
+        switch (record.group)
+        {
+        case 85:
+            if (dataLen >= 16)
+            {
+                FORMAT_LOGGER_BLOCK(pLogger, flags::APP_OBJECT_RX,
+                                    "Group85Var%u DataSetPrototype - UUID + %zu element descriptor bytes",
+                                    record.variation, static_cast<size_t>(dataLen) - 16);
+            }
+            else
+            {
+                FORMAT_LOGGER_BLOCK(pLogger, flags::APP_OBJECT_RX,
+                                    "Group85Var%u DataSetPrototype - %u bytes (truncated)", record.variation, dataLen);
+            }
+            break;
+        case 86:
+            FORMAT_LOGGER_BLOCK(pLogger, flags::APP_OBJECT_RX, "Group86Var%u DataSetDescriptor - %u bytes",
+                                record.variation, dataLen);
+            break;
+        case 87:
+            FORMAT_LOGGER_BLOCK(pLogger, flags::APP_OBJECT_RX, "Group87Var%u DataSetPresentValue - %u bytes",
+                                record.variation, dataLen);
+            break;
+        case 88: {
+            if (dataLen >= 6)
+            {
+                uint64_t timestamp = 0;
+                for (int j = 0; j < 6; ++j)
+                {
+                    timestamp |= static_cast<uint64_t>(dataSlice[j]) << (j * 8);
+                }
+                FORMAT_LOGGER_BLOCK(pLogger, flags::APP_OBJECT_RX,
+                                    "Group88Var%u DataSetSnapshot - timestamp: %llu ms, %u value bytes",
+                                    record.variation, static_cast<unsigned long long>(timestamp), dataLen - 6);
+            }
+            else
+            {
+                FORMAT_LOGGER_BLOCK(pLogger, flags::APP_OBJECT_RX,
+                                    "Group88Var%u DataSetSnapshot - %u bytes (truncated)", record.variation, dataLen);
+            }
+            break;
+        }
+        default:
+            break;
+        }
+
+        // Deliver data through handler as OctetString
+        if (pHandler)
+        {
+            DeliverOctetString(dataSlice, record, pHandler);
+        }
+
+        buffer.advance(dataLen);
+    }
+
+    return ParseResult::OK;
 }
 
 void FreeFormatParser::DeliverDeviceAttribute(ser4cpp::rseq_t data,
@@ -793,6 +1006,12 @@ void FreeFormatParser::DeliverDeviceAttribute(ser4cpp::rseq_t data,
                 attr.timeValue |= static_cast<uint64_t>(data[j]) << (j * 8);
             }
         }
+        break;
+    }
+    case 8: // Unicode
+    {
+        attr.type = DeviceAttrType::UNICODE;
+        attr.stringValue.assign(reinterpret_cast<const char*>(static_cast<const uint8_t*>(data)), payloadLen);
         break;
     }
     case 254: // AttrList

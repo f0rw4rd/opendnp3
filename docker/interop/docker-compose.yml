@@ -1,0 +1,17 @@
+# docker-compose for opendnp3 interop tests.
+#
+# Usage:
+#   cd <repo-root>
+#   docker compose -f docker/interop/docker-compose.yml up --build
+#
+# The FreyrSCADA DNP3 library is proprietary software.
+# It is downloaded at build time and NOT redistributed.
+
+services:
+  interop-tests:
+    build:
+      context: ../..
+      dockerfile: docker/interop/Dockerfile
+    container_name: opendnp3-interop-tests
+    # Tests communicate over localhost inside the container
+    network_mode: host

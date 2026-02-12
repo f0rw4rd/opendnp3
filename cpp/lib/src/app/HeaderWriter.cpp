@@ -79,4 +79,32 @@ bool HeaderWriter::WriteHeaderWithReserve(GroupVariationID id, QualifierCode qc,
     return (position->length() < (3 + reserve)) ? false : WriteHeader(id, qc);
 }
 
+bool HeaderWriter::WriteFreeFormat(const IVariableLength& value)
+{
+    const auto objectSize = value.Size();
+    // header(3) + count(1) + size(2) + objectData(N)
+    const size_t totalNeeded = 3 + 1 + 2 + objectSize;
+
+    if (position->length() < totalNeeded)
+    {
+        return false;
+    }
+
+    auto gvid = value.InstanceID();
+
+    // Write the header: group, variation, qualifier 0x5B
+    ser4cpp::UInt8::write_to(*position, gvid.group);
+    ser4cpp::UInt8::write_to(*position, gvid.variation);
+    ser4cpp::UInt8::write_to(*position, QualifierCodeSpec::to_type(QualifierCode::UINT8_CNT_UINT16_FREE_FORMAT));
+
+    // Write count = 1
+    ser4cpp::UInt8::write_to(*position, 1);
+
+    // Write the size prefix
+    ser4cpp::UInt16::write_to(*position, static_cast<uint16_t>(objectSize));
+
+    // Write the object data
+    return value.Write(*position);
+}
+
 } // namespace opendnp3

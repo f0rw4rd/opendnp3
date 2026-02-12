@@ -474,7 +474,17 @@ void MContext::Freeze(FreezeType type, const HeaderBuilderT& builder, TaskConfig
 
 void MContext::ReadFile(const std::string& filename, const FileReadCallbackT& callback, TaskConfig config)
 {
-    auto task = std::make_shared<FileTransferTask>(this->tasks.context, *this->application, filename, callback,
+    auto task = std::make_shared<FileTransferTask>(this->tasks.context, *this->application, filename, 0, callback,
+                                                   this->logger, config);
+    this->ScheduleAdhocTask(task);
+}
+
+void MContext::ReadFile(const std::string& filename,
+                        uint32_t authKey,
+                        const FileReadCallbackT& callback,
+                        TaskConfig config)
+{
+    auto task = std::make_shared<FileTransferTask>(this->tasks.context, *this->application, filename, authKey, callback,
                                                    this->logger, config);
     this->ScheduleAdhocTask(task);
 }
@@ -500,7 +510,20 @@ void MContext::WriteFile(const std::string& filename,
                          TaskConfig config)
 {
     auto task = std::make_shared<FileWriteTask>(this->tasks.context, *this->application, filename, data, permissions,
-                                                callback, this->logger, config);
+                                                FileMode::WRITE, 0, callback, this->logger, config);
+    this->ScheduleAdhocTask(task);
+}
+
+void MContext::WriteFile(const std::string& filename,
+                         const std::vector<uint8_t>& data,
+                         FilePermissions permissions,
+                         FileMode mode,
+                         uint32_t authKey,
+                         const FileWriteCallbackT& callback,
+                         TaskConfig config)
+{
+    auto task = std::make_shared<FileWriteTask>(this->tasks.context, *this->application, filename, data, permissions,
+                                                mode, authKey, callback, this->logger, config);
     this->ScheduleAdhocTask(task);
 }
 

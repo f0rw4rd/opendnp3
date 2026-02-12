@@ -254,6 +254,17 @@ void MasterSessionStack::ReadFile(const std::string& filename,
     return executor->post(action);
 }
 
+void MasterSessionStack::ReadFile(const std::string& filename,
+                                  uint32_t authKey,
+                                  const FileReadCallbackT& callback,
+                                  const TaskConfig& config)
+{
+    auto action = [self = shared_from_this(), filename, authKey, callback, config]() -> void {
+        self->context->ReadFile(filename, authKey, callback, config);
+    };
+    return executor->post(action);
+}
+
 void MasterSessionStack::GetFileInfo(const std::string& filename,
                                      const FileInfoCallbackT& callback,
                                      const TaskConfig& config)
@@ -282,6 +293,20 @@ void MasterSessionStack::WriteFile(const std::string& filename,
 {
     auto action = [self = shared_from_this(), filename, data, permissions, callback, config]() -> void {
         self->context->WriteFile(filename, data, permissions, callback, config);
+    };
+    return executor->post(action);
+}
+
+void MasterSessionStack::WriteFile(const std::string& filename,
+                                   const std::vector<uint8_t>& data,
+                                   FilePermissions permissions,
+                                   FileMode mode,
+                                   uint32_t authKey,
+                                   const FileWriteCallbackT& callback,
+                                   const TaskConfig& config)
+{
+    auto action = [self = shared_from_this(), filename, data, permissions, mode, authKey, callback, config]() -> void {
+        self->context->WriteFile(filename, data, permissions, mode, authKey, callback, config);
     };
     return executor->post(action);
 }

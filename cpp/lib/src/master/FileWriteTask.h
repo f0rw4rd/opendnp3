@@ -48,6 +48,8 @@ public:
                   const std::string& filename,
                   std::vector<uint8_t> data,
                   FilePermissions permissions,
+                  FileMode mode,
+                  uint32_t authKey,
                   FileWriteCallbackT callback,
                   const Logger& logger,
                   const TaskConfig& config);
@@ -96,6 +98,8 @@ private:
     const std::string filename;
     const std::vector<uint8_t> fileData;
     const FilePermissions permissions;
+    const FileMode fileMode;
+    const uint32_t authKey;
     FileWriteCallbackT callback;
 
     State state;

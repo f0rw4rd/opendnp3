@@ -194,6 +194,11 @@ public:
                   const FileReadCallbackT& callback,
                   TaskConfig config = TaskConfig::Default());
 
+    void ReadFile(const std::string& filename,
+                  uint32_t authKey,
+                  const FileReadCallbackT& callback,
+                  TaskConfig config = TaskConfig::Default());
+
     void GetFileInfo(const std::string& filename,
                      const FileInfoCallbackT& callback,
                      TaskConfig config = TaskConfig::Default());
@@ -205,6 +210,14 @@ public:
     void WriteFile(const std::string& filename,
                    const std::vector<uint8_t>& data,
                    FilePermissions permissions,
+                   const FileWriteCallbackT& callback,
+                   TaskConfig config = TaskConfig::Default());
+
+    void WriteFile(const std::string& filename,
+                   const std::vector<uint8_t>& data,
+                   FilePermissions permissions,
+                   FileMode mode,
+                   uint32_t authKey,
                    const FileWriteCallbackT& callback,
                    TaskConfig config = TaskConfig::Default());
 

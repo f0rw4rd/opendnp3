@@ -197,6 +197,21 @@ public:
         = 0;
 
     /**
+     * Read a file from the outstation with an explicit auth key
+     * from a previous AuthenticateFile call.
+     *
+     * @param filename Remote file path
+     * @param authKey Auth key from AuthenticateFile (0 if none)
+     * @param callback Called with the result (data or error)
+     * @param config Optional task configuration
+     */
+    virtual void ReadFile(const std::string& filename,
+                          uint32_t authKey,
+                          const FileReadCallbackT& callback,
+                          const TaskConfig& config = TaskConfig::Default())
+        = 0;
+
+    /**
      * Get file information (metadata) from the outstation.
      * Sends GET_FILE_INFO with Group70Var8 (filename), expects Group70Var7 response.
      *
@@ -235,6 +250,27 @@ public:
     virtual void WriteFile(const std::string& filename,
                            const std::vector<uint8_t>& data,
                            FilePermissions permissions,
+                           const FileWriteCallbackT& callback,
+                           const TaskConfig& config = TaskConfig::Default())
+        = 0;
+
+    /**
+     * Write a file to the outstation with an explicit file mode (WRITE or APPEND)
+     * and an optional auth key from a previous AuthenticateFile call.
+     *
+     * @param filename Remote file path
+     * @param data File content to write
+     * @param permissions UNIX-style file permissions
+     * @param mode File open mode (WRITE or APPEND)
+     * @param authKey Auth key from AuthenticateFile (0 if none)
+     * @param callback Called with the result
+     * @param config Optional task configuration
+     */
+    virtual void WriteFile(const std::string& filename,
+                           const std::vector<uint8_t>& data,
+                           FilePermissions permissions,
+                           FileMode mode,
+                           uint32_t authKey,
                            const FileWriteCallbackT& callback,
                            const TaskConfig& config = TaskConfig::Default())
         = 0;

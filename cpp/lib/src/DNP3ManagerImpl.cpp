@@ -90,6 +90,30 @@ std::shared_ptr<IChannel> DNP3ManagerImpl::AddTCPClient(const std::string& id,
     return channel;
 }
 
+std::shared_ptr<IChannel> DNP3ManagerImpl::AddOutstationTCPClient(const std::string& id,
+                                                                  const LogLevels& levels,
+                                                                  const ChannelRetry& retry,
+                                                                  const std::vector<IPEndpoint>& hosts,
+                                                                  const std::string& local,
+                                                                  std::shared_ptr<IChannelListener> listener)
+{
+    auto create = [&]() -> std::shared_ptr<IChannel> {
+        auto clogger = this->logger.detach(id, levels);
+        auto executor = exe4cpp::StrandExecutor::create(this->io);
+        auto iohandler = TCPClientIOHandler::Create(clogger, listener, executor, retry, IPEndpointsList(hosts), local);
+        return DNP3Channel::Create(clogger, executor, iohandler, this->resources);
+    };
+
+    auto channel = this->resources->Bind<IChannel>(create);
+
+    if (!channel)
+    {
+        throw DNP3Error(Error::SHUTTING_DOWN);
+    }
+
+    return channel;
+}
+
 std::shared_ptr<IChannel> DNP3ManagerImpl::AddTCPServer(const std::string& id,
                                                         const LogLevels& levels,
                                                         ServerAcceptMode mode,

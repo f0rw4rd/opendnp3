@@ -1,3 +1,25 @@
+### 3.1.2.1 (f0rw4rd fork) ###
+
+New features:
+* File transfer protocol: ReadFile, WriteFile, DeleteFile, GetFileInfo, ReadDirectory, AbortFile, AuthenticateFile
+* Outstation file handler interface (IFileHandler) for serving file operations
+* Device attributes (Group 0) with ISOEHandler::OnDeviceAttribute callback
+* Write analog input dead bands (Group 34)
+* Link status check (CheckLinkStatus)
+* Freeze operations with configurable headers
+* Outstation TCP client mode (AddOutstationTCPClient)
+* Raw APDU access via ISOEHandler::OnRawAPDU
+
+Bindings:
+* Python bindings via pybind11 (DNP3Manager, channels, master, outstation, file transfer, all data types)
+* Python wheel build system with Docker (Linux) and native CMake (Windows)
+* GitHub Actions CI for wheel packaging (Python 3.9-3.13, Linux x86_64 + Windows x86_64)
+* PyPI publishing on tagged releases
+
+Testing:
+* Interop tests against stepfunc/dnp3 (optional, non-commercial evaluation only)
+* 103 Python integration tests
+
 ### 3.1.2 ###
 * :beetle: Fix `PrintingSOEHandler` octet string size not printing properly.
   See [4372862](https://github.com/dnp3/opendnp3/commit/4372862728851f559a01edcd88bc15ce6ce7f350)

@@ -25,9 +25,12 @@ set(unittests_src
     ./TestAPDUWriting.cpp    
     ./TestCollectionTransform.cpp
     ./TestControlRelayOutputBlock.cpp
+    ./TestDataSets.cpp
+    ./TestDeviceAttrUnicode.cpp
     ./TestCRC.cpp
     ./TestEventStorage.cpp
-    ./TestFlags.cpp    
+    ./TestFlags.cpp
+    ./TestGroup120.cpp
     ./TestIPEndpointsList.cpp
     ./TestLinkAddresses.cpp
     ./TestLinkFrame.cpp
@@ -59,7 +62,21 @@ set(unittests_src
     ./TestTransportLayer.cpp
     ./TestTypedCommandHeader.cpp
     ./TestUpdateBuilder.cpp
+    ./TestVirtualTerminal.cpp
     ./TestWriteConversions.cpp
+
+    ./TestSecureCompare.cpp
+    ./TestCriticalFunctions.cpp
+    ./TestPermissions.cpp
+    ./TestSessionKeys.cpp
+    ./TestUpdateKey.cpp
+    ./TestStatistics.cpp
+    ./TestStatThresholds.cpp
+    ./TestOutstationUserDatabase.cpp
+    ./TestAggressiveModeParser.cpp
+    ./TestAuthRequestParser.cpp
+    ./TestDeferredASDU.cpp
+    ./TestKeyChangeConfirmationHMAC.cpp
 
     ./utils/APDUHelpers.cpp
     ./utils/APDUHexBuilders.cpp

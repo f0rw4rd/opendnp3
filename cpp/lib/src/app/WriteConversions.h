@@ -26,6 +26,8 @@
 #include "gen/objects/Group10.h"
 #include "gen/objects/Group11.h"
 #include "gen/objects/Group12.h"
+#include "gen/objects/Group121.h"
+#include "gen/objects/Group122.h"
 #include "gen/objects/Group13.h"
 #include "gen/objects/Group2.h"
 #include "gen/objects/Group20.h"
@@ -45,6 +47,7 @@
 #include "gen/objects/Group50.h"
 
 #include "opendnp3/app/MeasurementTypes.h"
+#include "opendnp3/app/SecurityStat.h"
 
 namespace opendnp3
 {
@@ -294,6 +297,45 @@ struct ConvertGroup50Var4 : private StaticOnly
         ret.time = value.time;
         ret.interval = value.interval;
         ret.units = value.units;
+        return ret;
+    }
+};
+
+// Group 121
+struct ConvertGroup121Var1 : private StaticOnly
+{
+    static Group121Var1 Apply(const SecurityStat& value)
+    {
+        Group121Var1 ret;
+        ret.flags = value.quality;
+        ret.assocId = value.value.assocId;
+        ret.value = value.value.count;
+        return ret;
+    }
+};
+
+// Group 122
+struct ConvertGroup122Var1 : private StaticOnly
+{
+    static Group122Var1 Apply(const SecurityStat& value)
+    {
+        Group122Var1 ret;
+        ret.flags = value.quality;
+        ret.assocId = value.value.assocId;
+        ret.value = value.value.count;
+        return ret;
+    }
+};
+
+struct ConvertGroup122Var2 : private StaticOnly
+{
+    static Group122Var2 Apply(const SecurityStat& value)
+    {
+        Group122Var2 ret;
+        ret.flags = value.quality;
+        ret.assocId = value.value.assocId;
+        ret.value = value.value.count;
+        ret.time = value.time;
         return ret;
     }
 };

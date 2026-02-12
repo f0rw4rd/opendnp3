@@ -36,11 +36,13 @@ namespace opendnp3
 FileTransferTask::FileTransferTask(const std::shared_ptr<TaskContext>& context,
                                    IMasterApplication& app,
                                    const std::string& filename,
+                                   uint32_t authKey,
                                    FileReadCallbackT callback,
                                    const Logger& logger,
                                    const TaskConfig& config)
     : IMasterTask(context, app, TaskBehavior::SingleExecutionNoRetry(), logger, config),
       filename(filename),
+      authKey(authKey),
       callback(std::move(callback)),
       state(State::OPEN_FILE),
       fileHandle(0),
@@ -135,8 +137,8 @@ bool FileTransferTask::WriteGroup70Var3(APDURequest& request)
     // permissions: 0x01FF (all permissions)
     ser4cpp::UInt16::write_to(wseq, 0x01FF);
 
-    // auth_key: 0
-    ser4cpp::UInt32::write_to(wseq, 0);
+    // auth_key
+    ser4cpp::UInt32::write_to(wseq, authKey);
 
     // file_size: 0 (reading)
     ser4cpp::UInt32::write_to(wseq, 0);

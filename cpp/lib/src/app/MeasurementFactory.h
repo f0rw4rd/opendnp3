@@ -25,6 +25,7 @@
 #include "opendnp3/app/BinaryCommandEvent.h"
 #include "opendnp3/app/ControlRelayOutputBlock.h"
 #include "opendnp3/app/MeasurementTypes.h"
+#include "opendnp3/app/SecurityStat.h"
 #include "opendnp3/util/StaticOnly.h"
 
 namespace opendnp3
@@ -188,6 +189,19 @@ template<class Target, class ValueType> struct AnalogOutputFactory : private Sta
     inline static Target From(ValueType value, uint8_t status)
     {
         return Target(value, CommandStatusSpec::from_type(status));
+    }
+};
+
+struct SecurityStatFactory : private StaticOnly
+{
+    inline static SecurityStat From(uint8_t flags, uint16_t assocId, uint32_t count)
+    {
+        return SecurityStat(flags, assocId, count);
+    }
+
+    inline static SecurityStat From(uint8_t flags, uint16_t assocId, uint32_t count, DNPTime time)
+    {
+        return SecurityStat(flags, assocId, count, time);
     }
 };
 

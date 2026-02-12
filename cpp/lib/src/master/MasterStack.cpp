@@ -219,6 +219,17 @@ void MasterStack::ReadFile(const std::string& filename, const FileReadCallbackT&
     return this->executor->post(add);
 }
 
+void MasterStack::ReadFile(const std::string& filename,
+                           uint32_t authKey,
+                           const FileReadCallbackT& callback,
+                           const TaskConfig& config)
+{
+    auto add = [self = this->shared_from_this(), filename, authKey, callback, config]() {
+        return self->mcontext->ReadFile(filename, authKey, callback, config);
+    };
+    return this->executor->post(add);
+}
+
 void MasterStack::GetFileInfo(const std::string& filename, const FileInfoCallbackT& callback, const TaskConfig& config)
 {
     auto add = [self = this->shared_from_this(), filename, callback, config]() {
@@ -245,6 +256,20 @@ void MasterStack::WriteFile(const std::string& filename,
 {
     auto add = [self = this->shared_from_this(), filename, data, permissions, callback, config]() {
         return self->mcontext->WriteFile(filename, data, permissions, callback, config);
+    };
+    return this->executor->post(add);
+}
+
+void MasterStack::WriteFile(const std::string& filename,
+                            const std::vector<uint8_t>& data,
+                            FilePermissions permissions,
+                            FileMode mode,
+                            uint32_t authKey,
+                            const FileWriteCallbackT& callback,
+                            const TaskConfig& config)
+{
+    auto add = [self = this->shared_from_this(), filename, data, permissions, mode, authKey, callback, config]() {
+        return self->mcontext->WriteFile(filename, data, permissions, mode, authKey, callback, config);
     };
     return this->executor->post(add);
 }

@@ -27,6 +27,7 @@ set(opendnp3_public_headers
     ./include/opendnp3/app/MeasurementTypes.h
     ./include/opendnp3/app/OctetData.h
     ./include/opendnp3/app/OctetString.h
+    ./include/opendnp3/app/SecurityStat.h
 
     ./include/opendnp3/app/parsing/ICollection.h
 
@@ -47,6 +48,9 @@ set(opendnp3_public_headers
     ./include/opendnp3/gen/AnalogQuality.h
     ./include/opendnp3/gen/AssignClassType.h
     ./include/opendnp3/gen/Attributes.h
+    ./include/opendnp3/gen/AuthErrorCode.h
+    ./include/opendnp3/gen/CertificateType.h
+    ./include/opendnp3/gen/ChallengeReason.h
     ./include/opendnp3/gen/BinaryOutputStatusQuality.h
     ./include/opendnp3/gen/BinaryQuality.h
     ./include/opendnp3/gen/ChannelState.h
@@ -71,8 +75,12 @@ set(opendnp3_public_headers
     ./include/opendnp3/gen/FreezeType.h
     ./include/opendnp3/gen/FunctionCode.h
     ./include/opendnp3/gen/GroupVariation.h
+    ./include/opendnp3/gen/HMACType.h
     ./include/opendnp3/gen/IndexQualifierMode.h
     ./include/opendnp3/gen/IntervalUnits.h
+    ./include/opendnp3/gen/KeyChangeMethod.h
+    ./include/opendnp3/gen/KeyStatus.h
+    ./include/opendnp3/gen/KeyWrapAlgorithm.h
     ./include/opendnp3/gen/LinkFunction.h
     ./include/opendnp3/gen/LinkStatus.h
     ./include/opendnp3/gen/MasterTaskType.h
@@ -100,6 +108,7 @@ set(opendnp3_public_headers
     ./include/opendnp3/gen/TimestampQuality.h
     ./include/opendnp3/gen/TimeSyncMode.h
     ./include/opendnp3/gen/TripCloseCode.h
+    ./include/opendnp3/gen/UserOperation.h
 
     ./include/opendnp3/link/Addresses.h
     ./include/opendnp3/link/ILinkListener.h
@@ -167,6 +176,27 @@ set(opendnp3_public_headers
     ./include/opendnp3/util/Timestamp.h
 	./include/opendnp3/util/Uncopyable.h
     ./include/opendnp3/util/UTCTimestamp.h
+
+    ./include/opendnp3/crypto/ICryptoProvider.h
+    ./include/opendnp3/crypto/IHMACAlgo.h
+    ./include/opendnp3/crypto/IKeyWrapAlgo.h
+    ./include/opendnp3/crypto/ISecureRandom.h
+    ./include/opendnp3/crypto/SecureCompare.h
+
+    ./include/opendnp3/gen/SecurityStatIndex.h
+    ./include/opendnp3/gen/UserRole.h
+
+    ./include/opendnp3/secauth/AuthConstants.h
+    ./include/opendnp3/secauth/CriticalFunctions.h
+    ./include/opendnp3/secauth/HMACMode.h
+    ./include/opendnp3/secauth/IMasterApplicationSA.h
+    ./include/opendnp3/secauth/IOutstationApplicationSA.h
+    ./include/opendnp3/secauth/MasterAuthSettings.h
+    ./include/opendnp3/secauth/MasterAuthStackConfig.h
+    ./include/opendnp3/secauth/OutstationAuthSettings.h
+    ./include/opendnp3/secauth/OutstationAuthStackConfig.h
+    ./include/opendnp3/secauth/StatThresholds.h
+    ./include/opendnp3/secauth/UpdateKey.h
 )
 
 set(opendnp3_private_headers
@@ -249,17 +279,25 @@ set(opendnp3_private_headers
     ./src/decoder/Indent.h
     ./src/decoder/LoggingHandler.h
         
+    ./src/gen/AuthErrorCodeSerialization.h
+    ./src/gen/CertificateTypeSerialization.h
+    ./src/gen/ChallengeReasonSerialization.h
     ./src/gen/CommandStatusSerialization.h
     ./src/gen/DoubleBitSerialization.h
     ./src/gen/FlagsTypeSerialization.h
     ./src/gen/FlowControlSerialization.h
     ./src/gen/FunctionCodeSerialization.h
     ./src/gen/GroupVariationSerialization.h
+    ./src/gen/HMACTypeSerialization.h
     ./src/gen/IntervalUnitsSerialization.h
+    ./src/gen/KeyChangeMethodSerialization.h
+    ./src/gen/KeyStatusSerialization.h
+    ./src/gen/KeyWrapAlgorithmSerialization.h
     ./src/gen/LinkFunctionSerialization.h
     ./src/gen/ParitySerialization.h
     ./src/gen/QualifierCodeSerialization.h
     ./src/gen/StopBitsSerialization.h
+    ./src/gen/UserOperationSerialization.h
 
     ./src/gen/objects/Group1.h
     ./src/gen/objects/Group2.h
@@ -288,11 +326,18 @@ set(opendnp3_private_headers
     ./src/gen/objects/Group60.h
     ./src/gen/objects/Group70.h
     ./src/gen/objects/Group80.h
+    ./src/gen/objects/Group85.h
+    ./src/gen/objects/Group86.h
+    ./src/gen/objects/Group87.h
+    ./src/gen/objects/Group88.h
     ./src/gen/objects/Group102.h
     ./src/gen/objects/Group110.h
     ./src/gen/objects/Group111.h
     ./src/gen/objects/Group112.h
     ./src/gen/objects/Group113.h
+    ./src/gen/objects/Group120.h
+    ./src/gen/objects/Group121.h
+    ./src/gen/objects/Group122.h
 
     ./src/link/CRC.h
     ./src/link/IFrameSink.h
@@ -424,6 +469,56 @@ set(opendnp3_private_headers
     ./src/transport/TransportSeqNum.h
     ./src/transport/TransportStack.h
     ./src/transport/TransportTx.h
+
+    ./src/crypto/AESKeyWrap.h
+    ./src/crypto/CryptoErrorCodes.h
+    ./src/crypto/CryptoProvider.h
+    ./src/crypto/GenericHMAC.h
+    ./src/crypto/SHA1HMAC.h
+    ./src/crypto/SHA256HMAC.h
+
+    ./src/secauth/AggressiveModeParser.h
+    ./src/secauth/AuthorityKey.h
+    ./src/secauth/AuthSizes.h
+    ./src/secauth/Crypto.h
+    ./src/secauth/DeferredASDU.h
+    ./src/secauth/HMACProvider.h
+    ./src/secauth/KeyChangeConfirmationHMAC.h
+    ./src/secauth/SessionKeys.h
+    ./src/secauth/SessionKeysView.h
+    ./src/secauth/SessionStore.h
+    ./src/secauth/SingleObjectHandlers.h
+    ./src/secauth/SingleValueHandler.h
+    ./src/secauth/StringConversions.h
+
+    ./src/secauth/master/BeginUpdateKeyChangeCallbackT.h
+    ./src/secauth/master/BeginUpdateKeyChangeResult.h
+    ./src/secauth/master/FinishUpdateKeyChangeArgs.h
+    ./src/secauth/master/IMasterUserDatabase.h
+    ./src/secauth/master/KeyStatusHandler.h
+    ./src/secauth/master/KeyWrap.h
+    ./src/secauth/master/MasterSecurity.h
+    ./src/secauth/master/MasterUserDatabase.h
+    ./src/secauth/master/UserStatusChange.h
+
+    ./src/secauth/outstation/AuthorityCredentials.h
+    ./src/secauth/outstation/ChallengeState.h
+    ./src/secauth/outstation/EncryptedUpdateKey.h
+    ./src/secauth/outstation/FinishUpdateKeyChangeHandler.h
+    ./src/secauth/outstation/IOAuthState.h
+    ./src/secauth/outstation/IOutstationUserDatabase.h
+    ./src/secauth/outstation/OutstationErrorCodes.h
+    ./src/secauth/outstation/OutstationSecurity.h
+    ./src/secauth/outstation/OutstationUserDatabase.h
+    ./src/secauth/outstation/OutstationUserInfo.h
+    ./src/secauth/outstation/PendingUserStatusChange.h
+    ./src/secauth/outstation/Permissions.h
+    ./src/secauth/outstation/RoleBasedPermissions.h
+    ./src/secauth/outstation/SessionKeyChangeState.h
+    ./src/secauth/outstation/SessionKeyUnwrapBuffer.h
+    ./src/secauth/outstation/Statistics.h
+    ./src/secauth/outstation/UnofficialStatistics.h
+    ./src/secauth/outstation/UpdateKeyChangeState.h
 )
 
 set(opendnp3_src
@@ -453,6 +548,7 @@ set(opendnp3_src
 	./src/app/MeasurementTypes.cpp
     ./src/app/OctetData.cpp
     ./src/app/QualityFlags.cpp
+    ./src/app/SecurityStat.cpp
 
     ./src/app/parsing/APDUHeaderParser.cpp
     ./src/app/parsing/APDUParser.cpp
@@ -490,8 +586,11 @@ set(opendnp3_src
     ./src/gen/AnalogQuality.cpp
     ./src/gen/AssignClassType.cpp
     ./src/gen/Attributes.cpp
+    ./src/gen/AuthErrorCode.cpp
     ./src/gen/BinaryOutputStatusQuality.cpp
     ./src/gen/BinaryQuality.cpp
+    ./src/gen/CertificateType.cpp
+    ./src/gen/ChallengeReason.cpp
     ./src/gen/ChannelState.cpp
     ./src/gen/CommandPointState.cpp
     ./src/gen/CommandStatus.cpp
@@ -507,13 +606,18 @@ set(opendnp3_src
     ./src/gen/EventFrozenCounterVariation.cpp
     ./src/gen/EventMode.cpp
     ./src/gen/EventOctetStringVariation.cpp
+    ./src/gen/EventSecurityStatVariation.cpp
     ./src/gen/FlagsType.cpp
     ./src/gen/FlowControl.cpp
     ./src/gen/FrozenCounterQuality.cpp
     ./src/gen/FunctionCode.cpp
     ./src/gen/GroupVariation.cpp
+    ./src/gen/HMACType.cpp
     ./src/gen/IndexQualifierMode.cpp
     ./src/gen/IntervalUnits.cpp
+    ./src/gen/KeyChangeMethod.cpp
+    ./src/gen/KeyStatus.cpp
+    ./src/gen/KeyWrapAlgorithm.cpp
     ./src/gen/LinkFunction.cpp
     ./src/gen/LinkStatus.cpp
     ./src/gen/MasterTaskType.cpp
@@ -533,6 +637,7 @@ set(opendnp3_src
     ./src/gen/StaticDoubleBinaryVariation.cpp
     ./src/gen/StaticFrozenCounterVariation.cpp
     ./src/gen/StaticOctetStringVariation.cpp
+    ./src/gen/StaticSecurityStatVariation.cpp
     ./src/gen/StaticTimeAndIntervalVariation.cpp
     ./src/gen/StaticTypeBitmask.cpp
     ./src/gen/StopBits.cpp
@@ -540,6 +645,7 @@ set(opendnp3_src
     ./src/gen/TimestampQuality.cpp
     ./src/gen/TimeSyncMode.cpp
     ./src/gen/TripCloseCode.cpp
+    ./src/gen/UserOperation.cpp
 
     ./src/gen/objects/Group1.cpp
     ./src/gen/objects/Group2.cpp
@@ -566,6 +672,9 @@ set(opendnp3_src
     ./src/gen/objects/Group51.cpp
     ./src/gen/objects/Group52.cpp
     ./src/gen/objects/Group102.cpp
+    ./src/gen/objects/Group120.cpp
+    ./src/gen/objects/Group121.cpp
+    ./src/gen/objects/Group122.cpp
 
     ./src/link/Addresses.cpp
     ./src/link/CRC.cpp
@@ -669,6 +778,52 @@ set(opendnp3_src
 
     ./src/util/TimeDuration.cpp
     ./src/util/Timestamp.cpp
+
+    ./src/crypto/AESKeyWrap.cpp
+    ./src/crypto/CryptoErrorCodes.cpp
+    ./src/crypto/CryptoProvider.cpp
+    ./src/crypto/GenericHMAC.cpp
+    ./src/crypto/SecureCompare.cpp
+    ./src/crypto/SHA1HMAC.cpp
+    ./src/crypto/SHA256HMAC.cpp
+
+    ./src/secauth/AggressiveModeParser.cpp
+    ./src/secauth/AuthorityKey.cpp
+    ./src/secauth/CriticalFunctions.cpp
+    ./src/secauth/Crypto.cpp
+    ./src/secauth/DeferredASDU.cpp
+    ./src/secauth/HMACMode.cpp
+    ./src/secauth/HMACProvider.cpp
+    ./src/secauth/KeyChangeConfirmationHMAC.cpp
+    ./src/secauth/SessionKeys.cpp
+    ./src/secauth/SessionStore.cpp
+    ./src/secauth/StatThresholds.cpp
+    ./src/secauth/StringConversions.cpp
+    ./src/secauth/UpdateKey.cpp
+
+    ./src/secauth/master/BeginUpdateKeyChangeResult.cpp
+    ./src/secauth/master/FinishUpdateKeyChangeArgs.cpp
+    ./src/secauth/master/KeyStatusHandler.cpp
+    ./src/secauth/master/KeyWrap.cpp
+    ./src/secauth/master/MasterSecurity.cpp
+    ./src/secauth/master/MasterUserDatabase.cpp
+    ./src/secauth/master/UserStatusChange.cpp
+
+    ./src/secauth/outstation/AuthorityCredentials.cpp
+    ./src/secauth/outstation/ChallengeState.cpp
+    ./src/secauth/outstation/EncryptedUpdateKey.cpp
+    ./src/secauth/outstation/FinishUpdateKeyChangeHandler.cpp
+    ./src/secauth/outstation/IOAuthState.cpp
+    ./src/secauth/outstation/OutstationErrorCodes.cpp
+    ./src/secauth/outstation/OutstationSecurity.cpp
+    ./src/secauth/outstation/OutstationUserDatabase.cpp
+    ./src/secauth/outstation/PendingUserStatusChange.cpp
+    ./src/secauth/outstation/Permissions.cpp
+    ./src/secauth/outstation/RoleBasedPermissions.cpp
+    ./src/secauth/outstation/SessionKeyChangeState.cpp
+    ./src/secauth/outstation/SessionKeyUnwrapBuffer.cpp
+    ./src/secauth/outstation/Statistics.cpp
+    ./src/secauth/outstation/UpdateKeyChangeState.cpp
 )
 
 set(opendnp3_tls_private_headers

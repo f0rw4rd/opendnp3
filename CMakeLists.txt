@@ -11,14 +11,14 @@ set(OPENDNP3_MAJOR_VERSION 3)
 set(OPENDNP3_MINOR_VERSION 1)
 set(OPENDNP3_MICRO_VERSION 2)
 set(OPENDNP3_VERSION ${OPENDNP3_MAJOR_VERSION}.${OPENDNP3_MINOR_VERSION}.${OPENDNP3_MICRO_VERSION})
-project(opendnp3 VERSION ${OPENDNP3_VERSION})
+project(yadnp3 VERSION ${OPENDNP3_VERSION})
 
 # Packing variable
-set(CPACK_PACKAGE_NAME opendnp3)
-set(CPACK_PACKAGE_VENDOR "Step Function I/O LLC")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "DNP3 (IEEE-1815) protocol stack")
-set(CPACK_PACKAGE_DESCRIPTION "OpenDNP3 is the de facto reference implementation of IEEE-1815 (DNP3), a standards-based SCADA protocol.")
-set(CPACK_PACKAGE_HOMEPAGE_URL "https://dnp3.github.io/")
+set(CPACK_PACKAGE_NAME yadnp3)
+set(CPACK_PACKAGE_VENDOR "f0rw4rd")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "DNP3 (IEEE-1815) protocol stack - Yet Another opendnp3 fork")
+set(CPACK_PACKAGE_DESCRIPTION "yadnp3 is an experimental fork of opendnp3, the de facto reference implementation of IEEE-1815 (DNP3).")
+set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/f0rw4rd/opendnp3")
 set(CPACK_RESOURCE_FILE_LICENSE ${CMAKE_CURRENT_LIST_DIR}/LICENSE)
 set(CPACK_RESOURCE_FILE_README ${CMAKE_CURRENT_LIST_DIR}/README.md)
 set(CPACK_PACKAGE_VERSION_MAJOR ${OPENDNP3_MAJOR_VERSION})
@@ -58,6 +58,7 @@ option(DNP3_EVERYTHING "Build all optional targets" OFF)
 option(DNP3_STATIC_LIBS "Build static libraries instead of shared libraries" ${DNP3_STATIC_LIBS_BY_DEFAULT})
 option(DNP3_LTO "Enable Link-Time Optimization for release builds" OFF)
 option(DNP3_INTEROP_TESTS "Build interop tests against stepfunc/dnp3 (requires prebuilt FFI library)" OFF)
+option(DNP3_FREYR_INTEROP_TESTS "Build interop tests against FreyrSCADA DNP3 (proprietary, for testing only)" OFF)
 
 if(DNP3_EVERYTHING)
     set(DNP3_TLS ON)
@@ -129,8 +130,38 @@ if(DNP3_TESTS)
     add_subdirectory(./cpp/tests/integration)
 
     if(DNP3_INTEROP_TESTS)
+        message(WARNING
+            "=================================================================\n"
+            " stepfunc/dnp3 interop tests enabled.\n"
+            "\n"
+            " The stepfunc/dnp3 FFI library is licensed under a proprietary\n"
+            " NON-COMMERCIAL EVALUATION license by Step Function I/O LLC.\n"
+            " It may NOT be used for commercial or production purposes.\n"
+            " It may NOT be redistributed or sublicensed.\n"
+            " See LICENSE.txt in the downloaded stepfunc_dnp3 distribution.\n"
+            "\n"
+            " By enabling DNP3_INTEROP_TESTS you acknowledge these terms.\n"
+            "=================================================================\n"
+        )
         include(./deps/stepfunc_dnp3.cmake)
         add_subdirectory(./cpp/tests/interop)
+    endif()
+
+    if(DNP3_FREYR_INTEROP_TESTS)
+        message(WARNING
+            "=================================================================\n"
+            " FreyrSCADA DNP3 interop tests enabled.\n"
+            "\n"
+            " The FreyrSCADA DNP3 library is PROPRIETARY software owned by\n"
+            " FreyrSCADA Embedded Solution Pvt Ltd.\n"
+            " It is NOT open source and NOT redistributed with opendnp3.\n"
+            " It is downloaded at Docker build time for interop testing ONLY.\n"
+            "\n"
+            " By enabling DNP3_FREYR_INTEROP_TESTS you acknowledge this.\n"
+            "=================================================================\n"
+        )
+        include(./deps/freyrscada_dnp3.cmake)
+        add_subdirectory(./cpp/tests/interop-freyr)
     endif()
 
     if(DNP3_COVERAGE)

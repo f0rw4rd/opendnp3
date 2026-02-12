@@ -73,6 +73,9 @@ EnumAndType GroupVariationRecord::GetEnumAndType(uint8_t group, uint8_t variatio
         case (111):
             enumeration = GroupVariation::Group111Var0;
             break;
+        case (86):
+            enumeration = GroupVariation::Group86Var0;
+            break;
         case (112):
             enumeration = GroupVariation::Group112Var0;
             break;
@@ -172,6 +175,18 @@ GroupVariationType GroupVariationRecord::GetType(uint8_t group, uint8_t variatio
             return GroupVariationType::EVENT;
         }
 
+    case (85):
+        return GroupVariationType::STATIC;
+
+    case (86):
+        return GroupVariationType::STATIC;
+
+    case (87):
+        return GroupVariationType::STATIC;
+
+    case (88):
+        return GroupVariationType::EVENT;
+
     case (102):
         return GroupVariationType::STATIC;
 
@@ -179,6 +194,12 @@ GroupVariationType GroupVariationRecord::GetType(uint8_t group, uint8_t variatio
         return GroupVariationType::STATIC;
 
     case (111):
+        return GroupVariationType::EVENT;
+
+    case (112):
+        return GroupVariationType::STATIC;
+
+    case (113):
         return GroupVariationType::EVENT;
 
     case (121):

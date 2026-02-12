@@ -1,14 +1,21 @@
 /*
- * Copyright 2024-2026 f0rw4rd (experimental fork)
+ * Copyright 2013-2022 Step Function I/O, LLC
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
+ * LLC (https://stepfunc.io) under one or more contributor license agreements.
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership. Green Energy Corp and Step Function I/O LLC license
+ * this file to you under the Apache License, Version 2.0 (the "License"); you
  * may not use this file except in compliance with the License. You may obtain
  * a copy of the License at:
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * This file is part of an experimental fork of opendnp3.
- * See the NOTICE file for upstream copyright attribution.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include "opendnp3/DNP3Manager.h"
@@ -115,11 +122,12 @@ void init_channel(py::module_& m)
                     self.verifyCallback = nullptr;
                     return;
                 }
-                py::function py_cb = py::reinterpret_borrow<py::function>(cb);
-                self.verifyCallback = [py_cb](bool preverified, int depth, const std::string& subject,
-                                              const std::string& certDER) -> bool {
+                auto cb_ptr = std::make_shared<py::function>(py::reinterpret_borrow<py::function>(cb));
+                self.verifyCallback = [cb_ptr](bool preverified, int depth, const std::string& subject,
+                                               const std::string& certDER) -> bool {
                     py::gil_scoped_acquire gil;
-                    return py_cb(preverified, depth, subject, py::bytes(certDER.data(), certDER.size())).cast<bool>();
+                    return (*cb_ptr)(preverified, depth, subject, py::bytes(certDER.data(), certDER.size()))
+                        .cast<bool>();
                 };
             },
             "Optional callback(preverified: bool, depth: int, subject: str, cert_der: bytes) -> bool");
@@ -131,6 +139,10 @@ void init_channel(py::module_& m)
         .def("Shutdown", &DNP3Manager::Shutdown, py::call_guard<py::gil_scoped_release>())
         .def("AddTCPClient", &DNP3Manager::AddTCPClient, py::arg("id"), py::arg("levels"), py::arg("retry"),
              py::arg("hosts"), py::arg("local"), py::arg("listener"), "Add a persistent TCP client channel",
+             py::call_guard<py::gil_scoped_release>())
+        .def("AddOutstationTCPClient", &DNP3Manager::AddOutstationTCPClient, py::arg("id"), py::arg("levels"),
+             py::arg("retry"), py::arg("hosts"), py::arg("local"), py::arg("listener"),
+             "Add a TCP client channel for outstation use (connects to a remote master server)",
              py::call_guard<py::gil_scoped_release>())
         .def("AddTCPServer", &DNP3Manager::AddTCPServer, py::arg("id"), py::arg("levels"), py::arg("mode"),
              py::arg("endpoint"), py::arg("listener"), "Add a persistent TCP server channel",

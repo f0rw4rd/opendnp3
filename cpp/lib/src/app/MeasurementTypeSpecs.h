@@ -23,6 +23,7 @@
 #include "opendnp3/app/EventCells.h"
 #include "opendnp3/app/EventTriggers.h"
 #include "opendnp3/app/OctetString.h"
+#include "opendnp3/app/SecurityStat.h"
 #include "opendnp3/outstation/MeasurementConfig.h"
 
 #include <ser4cpp/container/SequenceTypes.h>
@@ -151,6 +152,18 @@ struct TimeAndIntervalSpec : public TimeAndIntervalInfo
 {
     typedef TimeAndIntervalConfig config_t;
     typedef EmptyEventCell event_cell_t;
+};
+
+struct SecurityStatSpec : public SecurityStatInfo
+{
+    typedef SecurityStatConfig config_t;
+    typedef SimpleEventCell<SecurityStatSpec> event_cell_t;
+
+    inline static bool IsEvent(const SecurityStat& old_value, const SecurityStat& new_value, const config_t& config)
+    {
+        return (old_value.quality != new_value.quality) || (old_value.value.count != new_value.value.count)
+            || (old_value.value.assocId != new_value.value.assocId);
+    }
 };
 
 } // namespace opendnp3

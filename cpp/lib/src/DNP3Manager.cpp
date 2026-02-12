@@ -51,6 +51,16 @@ std::shared_ptr<IChannel> DNP3Manager::AddTCPClient(const std::string& id,
     return this->impl->AddTCPClient(id, levels, retry, hosts, local, std::move(listener));
 }
 
+std::shared_ptr<IChannel> DNP3Manager::AddOutstationTCPClient(const std::string& id,
+                                                              const LogLevels& levels,
+                                                              const ChannelRetry& retry,
+                                                              const std::vector<IPEndpoint>& hosts,
+                                                              const std::string& local,
+                                                              std::shared_ptr<IChannelListener> listener)
+{
+    return this->impl->AddOutstationTCPClient(id, levels, retry, hosts, local, std::move(listener));
+}
+
 std::shared_ptr<IChannel> DNP3Manager::AddTCPServer(const std::string& id,
                                                     const LogLevels& levels,
                                                     ServerAcceptMode mode,

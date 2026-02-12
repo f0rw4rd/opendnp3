@@ -80,7 +80,7 @@ struct TimeAndIntervalConfig : public StaticConfig<TimeAndIntervalInfo>
 {
 };
 
-struct SecurityStatConfig
+struct SecurityStatConfig : public DeadbandConfig<SecurityStatInfo>
 {
 };
 

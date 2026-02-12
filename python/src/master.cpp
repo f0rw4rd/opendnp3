@@ -1,18 +1,26 @@
 /*
- * Copyright 2024-2026 f0rw4rd (experimental fork)
+ * Copyright 2013-2022 Step Function I/O, LLC
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
+ * LLC (https://stepfunc.io) under one or more contributor license agreements.
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership. Green Energy Corp and Step Function I/O LLC license
+ * this file to you under the Apache License, Version 2.0 (the "License"); you
  * may not use this file except in compliance with the License. You may obtain
  * a copy of the License at:
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * This file is part of an experimental fork of opendnp3.
- * See the NOTICE file for upstream copyright attribution.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include "opendnp3/app/AnalogCommandEvent.h"
 #include "opendnp3/app/BinaryCommandEvent.h"
+#include "opendnp3/app/DeviceAttributes.h"
 #include "opendnp3/app/Indexed.h"
 #include "opendnp3/app/MeasurementTypes.h"
 #include "opendnp3/app/OctetString.h"
@@ -220,6 +228,17 @@ public:
         if (override_fn)
             override_fn(info, py::bytes(reinterpret_cast<const char*>(data), length));
     }
+
+    void OnDeviceAttribute(const HeaderInfo& info,
+                           uint8_t set,
+                           uint8_t variation,
+                           const DeviceAttributeValue& value) override
+    {
+        py::gil_scoped_acquire gil;
+        py::function override_fn = py::get_override(this, "OnDeviceAttribute");
+        if (override_fn)
+            override_fn(info, set, variation, value);
+    }
 };
 
 // Trampoline for IMasterApplication
@@ -303,7 +322,9 @@ void init_master(py::module_& m)
         m, "ISOEHandler", "Sequence-of-events callback interface for receiving measurements from a master")
         .def(py::init<>())
         .def("BeginFragment", &ISOEHandler::BeginFragment, py::arg("info"))
-        .def("EndFragment", &ISOEHandler::EndFragment, py::arg("info"));
+        .def("EndFragment", &ISOEHandler::EndFragment, py::arg("info"))
+        .def("OnDeviceAttribute", &ISOEHandler::OnDeviceAttribute, py::arg("info"), py::arg("set"),
+             py::arg("variation"), py::arg("value"), "Called when a device attribute (Group 0) is received");
 
     // IMasterApplication
     py::class_<IMasterApplication, PyMasterApplication, std::shared_ptr<IMasterApplication>>(
@@ -362,10 +383,12 @@ void init_master(py::module_& m)
             "SelectAndOperate",
             [](IMaster& self, const ControlRelayOutputBlock& command, uint16_t index, py::function callback,
                const TaskConfig& config) {
-                auto safe_cb = [cb = std::move(callback)](const ICommandTaskResult& result) {
+                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto safe_cb = [cb_ptr](const ICommandTaskResult& result) mutable {
                     auto snap = CommandTaskResultSnapshot::From(result);
                     py::gil_scoped_acquire gil;
-                    cb(snap);
+                    (*cb_ptr)(snap);
+                    cb_ptr.reset();
                 };
                 self.SelectAndOperate(command, index, safe_cb, config);
             },
@@ -375,10 +398,12 @@ void init_master(py::module_& m)
             "SelectAndOperate",
             [](IMaster& self, const AnalogOutputInt16& command, uint16_t index, py::function callback,
                const TaskConfig& config) {
-                auto safe_cb = [cb = std::move(callback)](const ICommandTaskResult& result) {
+                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto safe_cb = [cb_ptr](const ICommandTaskResult& result) mutable {
                     auto snap = CommandTaskResultSnapshot::From(result);
                     py::gil_scoped_acquire gil;
-                    cb(snap);
+                    (*cb_ptr)(snap);
+                    cb_ptr.reset();
                 };
                 self.SelectAndOperate(command, index, safe_cb, config);
             },
@@ -387,10 +412,12 @@ void init_master(py::module_& m)
             "SelectAndOperate",
             [](IMaster& self, const AnalogOutputInt32& command, uint16_t index, py::function callback,
                const TaskConfig& config) {
-                auto safe_cb = [cb = std::move(callback)](const ICommandTaskResult& result) {
+                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto safe_cb = [cb_ptr](const ICommandTaskResult& result) mutable {
                     auto snap = CommandTaskResultSnapshot::From(result);
                     py::gil_scoped_acquire gil;
-                    cb(snap);
+                    (*cb_ptr)(snap);
+                    cb_ptr.reset();
                 };
                 self.SelectAndOperate(command, index, safe_cb, config);
             },
@@ -399,10 +426,12 @@ void init_master(py::module_& m)
             "SelectAndOperate",
             [](IMaster& self, const AnalogOutputFloat32& command, uint16_t index, py::function callback,
                const TaskConfig& config) {
-                auto safe_cb = [cb = std::move(callback)](const ICommandTaskResult& result) {
+                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto safe_cb = [cb_ptr](const ICommandTaskResult& result) mutable {
                     auto snap = CommandTaskResultSnapshot::From(result);
                     py::gil_scoped_acquire gil;
-                    cb(snap);
+                    (*cb_ptr)(snap);
+                    cb_ptr.reset();
                 };
                 self.SelectAndOperate(command, index, safe_cb, config);
             },
@@ -411,10 +440,12 @@ void init_master(py::module_& m)
             "SelectAndOperate",
             [](IMaster& self, const AnalogOutputDouble64& command, uint16_t index, py::function callback,
                const TaskConfig& config) {
-                auto safe_cb = [cb = std::move(callback)](const ICommandTaskResult& result) {
+                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto safe_cb = [cb_ptr](const ICommandTaskResult& result) mutable {
                     auto snap = CommandTaskResultSnapshot::From(result);
                     py::gil_scoped_acquire gil;
-                    cb(snap);
+                    (*cb_ptr)(snap);
+                    cb_ptr.reset();
                 };
                 self.SelectAndOperate(command, index, safe_cb, config);
             },
@@ -423,10 +454,12 @@ void init_master(py::module_& m)
             "DirectOperate",
             [](IMaster& self, const ControlRelayOutputBlock& command, uint16_t index, py::function callback,
                const TaskConfig& config) {
-                auto safe_cb = [cb = std::move(callback)](const ICommandTaskResult& result) {
+                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto safe_cb = [cb_ptr](const ICommandTaskResult& result) mutable {
                     auto snap = CommandTaskResultSnapshot::From(result);
                     py::gil_scoped_acquire gil;
-                    cb(snap);
+                    (*cb_ptr)(snap);
+                    cb_ptr.reset();
                 };
                 self.DirectOperate(command, index, safe_cb, config);
             },
@@ -436,10 +469,12 @@ void init_master(py::module_& m)
             "DirectOperate",
             [](IMaster& self, const AnalogOutputInt16& command, uint16_t index, py::function callback,
                const TaskConfig& config) {
-                auto safe_cb = [cb = std::move(callback)](const ICommandTaskResult& result) {
+                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto safe_cb = [cb_ptr](const ICommandTaskResult& result) mutable {
                     auto snap = CommandTaskResultSnapshot::From(result);
                     py::gil_scoped_acquire gil;
-                    cb(snap);
+                    (*cb_ptr)(snap);
+                    cb_ptr.reset();
                 };
                 self.DirectOperate(command, index, safe_cb, config);
             },
@@ -448,10 +483,12 @@ void init_master(py::module_& m)
             "DirectOperate",
             [](IMaster& self, const AnalogOutputInt32& command, uint16_t index, py::function callback,
                const TaskConfig& config) {
-                auto safe_cb = [cb = std::move(callback)](const ICommandTaskResult& result) {
+                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto safe_cb = [cb_ptr](const ICommandTaskResult& result) mutable {
                     auto snap = CommandTaskResultSnapshot::From(result);
                     py::gil_scoped_acquire gil;
-                    cb(snap);
+                    (*cb_ptr)(snap);
+                    cb_ptr.reset();
                 };
                 self.DirectOperate(command, index, safe_cb, config);
             },
@@ -460,10 +497,12 @@ void init_master(py::module_& m)
             "DirectOperate",
             [](IMaster& self, const AnalogOutputFloat32& command, uint16_t index, py::function callback,
                const TaskConfig& config) {
-                auto safe_cb = [cb = std::move(callback)](const ICommandTaskResult& result) {
+                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto safe_cb = [cb_ptr](const ICommandTaskResult& result) mutable {
                     auto snap = CommandTaskResultSnapshot::From(result);
                     py::gil_scoped_acquire gil;
-                    cb(snap);
+                    (*cb_ptr)(snap);
+                    cb_ptr.reset();
                 };
                 self.DirectOperate(command, index, safe_cb, config);
             },
@@ -472,10 +511,12 @@ void init_master(py::module_& m)
             "DirectOperate",
             [](IMaster& self, const AnalogOutputDouble64& command, uint16_t index, py::function callback,
                const TaskConfig& config) {
-                auto safe_cb = [cb = std::move(callback)](const ICommandTaskResult& result) {
+                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto safe_cb = [cb_ptr](const ICommandTaskResult& result) mutable {
                     auto snap = CommandTaskResultSnapshot::From(result);
                     py::gil_scoped_acquire gil;
-                    cb(snap);
+                    (*cb_ptr)(snap);
+                    cb_ptr.reset();
                 };
                 self.DirectOperate(command, index, safe_cb, config);
             },
@@ -484,90 +525,175 @@ void init_master(py::module_& m)
         .def(
             "ReadFile",
             [](IMaster& self, const std::string& filename, py::function callback, const TaskConfig& config) {
-                auto safe_cb = [cb = std::move(callback)](const FileReadResult& result) {
-                    auto snap = result; // copy before acquiring GIL
+                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto safe_cb = [cb_ptr](const FileReadResult& result) mutable {
+                    auto snap = result;
                     py::gil_scoped_acquire gil;
-                    cb(snap);
+                    (*cb_ptr)(snap);
+                    cb_ptr.reset();
                 };
+                py::gil_scoped_release release;
                 self.ReadFile(filename, safe_cb, config);
             },
             py::arg("filename"), py::arg("callback"), py::arg("config") = TaskConfig::Default(),
-            "Read a file from the outstation", py::call_guard<py::gil_scoped_release>())
+            "Read a file from the outstation")
+        .def(
+            "ReadFileWithAuth",
+            [](IMaster& self, const std::string& filename, uint32_t authKey, py::function callback,
+               const TaskConfig& config) {
+                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto safe_cb = [cb_ptr](const FileReadResult& result) mutable {
+                    auto snap = result;
+                    py::gil_scoped_acquire gil;
+                    (*cb_ptr)(snap);
+                    cb_ptr.reset();
+                };
+                py::gil_scoped_release release;
+                self.ReadFile(filename, authKey, safe_cb, config);
+            },
+            py::arg("filename"), py::arg("authKey"), py::arg("callback"), py::arg("config") = TaskConfig::Default(),
+            "Read a file from the outstation with an auth key")
         .def(
             "WriteFile",
             [](IMaster& self, const std::string& filename, py::bytes data, FilePermissions permissions,
                py::function callback, const TaskConfig& config) {
                 std::string raw = data;
                 std::vector<uint8_t> vec(raw.begin(), raw.end());
-                auto safe_cb = [cb = std::move(callback)](const FileWriteResult& result) {
+                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto safe_cb = [cb_ptr](const FileWriteResult& result) mutable {
                     auto snap = result;
                     py::gil_scoped_acquire gil;
-                    cb(snap);
+                    (*cb_ptr)(snap);
+                    cb_ptr.reset();
                 };
+                py::gil_scoped_release release;
                 self.WriteFile(filename, vec, permissions, safe_cb, config);
             },
             py::arg("filename"), py::arg("data"), py::arg("permissions"), py::arg("callback"),
-            py::arg("config") = TaskConfig::Default(), "Write a file to the outstation",
-            py::call_guard<py::gil_scoped_release>())
+            py::arg("config") = TaskConfig::Default(), "Write a file to the outstation")
+        .def(
+            "WriteFileWithAuth",
+            [](IMaster& self, const std::string& filename, py::bytes data, FilePermissions permissions, FileMode mode,
+               uint32_t authKey, py::function callback, const TaskConfig& config) {
+                std::string raw = data;
+                std::vector<uint8_t> vec(raw.begin(), raw.end());
+                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto safe_cb = [cb_ptr](const FileWriteResult& result) mutable {
+                    auto snap = result;
+                    py::gil_scoped_acquire gil;
+                    (*cb_ptr)(snap);
+                    cb_ptr.reset();
+                };
+                py::gil_scoped_release release;
+                self.WriteFile(filename, vec, permissions, mode, authKey, safe_cb, config);
+            },
+            py::arg("filename"), py::arg("data"), py::arg("permissions"), py::arg("mode"), py::arg("authKey"),
+            py::arg("callback"), py::arg("config") = TaskConfig::Default(),
+            "Write a file to the outstation with explicit mode and auth key")
         .def(
             "DeleteFile",
             [](IMaster& self, const std::string& filename, py::function callback, const TaskConfig& config) {
-                auto safe_cb = [cb = std::move(callback)](const FileOperationResult& result) {
+                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto safe_cb = [cb_ptr](const FileOperationResult& result) mutable {
                     auto snap = result;
                     py::gil_scoped_acquire gil;
-                    cb(snap);
+                    (*cb_ptr)(snap);
+                    cb_ptr.reset();
                 };
+                py::gil_scoped_release release;
                 self.DeleteFile(filename, safe_cb, config);
             },
             py::arg("filename"), py::arg("callback"), py::arg("config") = TaskConfig::Default(),
-            "Delete a file on the outstation", py::call_guard<py::gil_scoped_release>())
+            "Delete a file on the outstation")
         .def(
             "GetFileInfo",
             [](IMaster& self, const std::string& filename, py::function callback, const TaskConfig& config) {
-                auto safe_cb = [cb = std::move(callback)](const FileInfoResult& result) {
+                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto safe_cb = [cb_ptr](const FileInfoResult& result) mutable {
                     auto snap = result;
                     py::gil_scoped_acquire gil;
-                    cb(snap);
+                    (*cb_ptr)(snap);
+                    cb_ptr.reset();
                 };
+                py::gil_scoped_release release;
                 self.GetFileInfo(filename, safe_cb, config);
             },
             py::arg("filename"), py::arg("callback"), py::arg("config") = TaskConfig::Default(),
-            "Get file information from the outstation", py::call_guard<py::gil_scoped_release>())
+            "Get file information from the outstation")
         .def(
             "ReadDirectory",
             [](IMaster& self, const std::string& path, py::function callback, const TaskConfig& config) {
-                auto safe_cb = [cb = std::move(callback)](const DirectoryReadResult& result) {
+                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto safe_cb = [cb_ptr](const DirectoryReadResult& result) mutable {
                     auto snap = result;
                     py::gil_scoped_acquire gil;
-                    cb(snap);
+                    (*cb_ptr)(snap);
+                    cb_ptr.reset();
                 };
+                py::gil_scoped_release release;
                 self.ReadDirectory(path, safe_cb, config);
             },
             py::arg("path"), py::arg("callback"), py::arg("config") = TaskConfig::Default(),
-            "Read a directory listing from the outstation", py::call_guard<py::gil_scoped_release>())
+            "Read a directory listing from the outstation")
         .def(
             "AbortFile",
             [](IMaster& self, uint32_t fileHandle, py::function callback, const TaskConfig& config) {
-                auto safe_cb = [cb = std::move(callback)](const FileOperationResult& result) {
+                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto safe_cb = [cb_ptr](const FileOperationResult& result) mutable {
                     auto snap = result;
                     py::gil_scoped_acquire gil;
-                    cb(snap);
+                    (*cb_ptr)(snap);
+                    cb_ptr.reset();
                 };
+                py::gil_scoped_release release;
                 self.AbortFile(fileHandle, safe_cb, config);
             },
             py::arg("fileHandle"), py::arg("callback"), py::arg("config") = TaskConfig::Default(),
-            "Abort an in-progress file transfer", py::call_guard<py::gil_scoped_release>())
+            "Abort an in-progress file transfer")
         .def(
             "AuthenticateFile",
             [](IMaster& self, const std::string& username, const std::string& password, py::function callback,
                const TaskConfig& config) {
-                auto safe_cb = [cb = std::move(callback)](const FileAuthResult_t& result) {
+                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto safe_cb = [cb_ptr](const FileAuthResult_t& result) mutable {
                     auto snap = result;
                     py::gil_scoped_acquire gil;
-                    cb(snap);
+                    (*cb_ptr)(snap);
+                    cb_ptr.reset();
                 };
+                py::gil_scoped_release release;
                 self.AuthenticateFile(username, password, safe_cb, config);
             },
             py::arg("username"), py::arg("password"), py::arg("callback"), py::arg("config") = TaskConfig::Default(),
-            "Authenticate for file transfer operations", py::call_guard<py::gil_scoped_release>());
+            "Authenticate for file transfer operations")
+        // ===== Dead-band and Link Status Methods =====
+        .def(
+            "WriteDeadBands",
+            [](IMaster& self, const std::vector<Indexed<AnalogInputDeadband>>& deadBands, py::function callback,
+               const TaskConfig& config) {
+                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto safe_cb = [cb_ptr](const FileOperationResult& result) mutable {
+                    auto snap = result;
+                    py::gil_scoped_acquire gil;
+                    (*cb_ptr)(snap);
+                    cb_ptr.reset();
+                };
+                py::gil_scoped_release release;
+                self.WriteDeadBands(deadBands, safe_cb, config);
+            },
+            py::arg("deadBands"), py::arg("callback"), py::arg("config") = TaskConfig::Default(),
+            "Write analog input dead-band values to the outstation")
+        .def(
+            "CheckLinkStatus",
+            [](IMaster& self, py::function callback) {
+                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto safe_cb = [cb_ptr](bool success) mutable {
+                    py::gil_scoped_acquire gil;
+                    (*cb_ptr)(success);
+                    cb_ptr.reset();
+                };
+                py::gil_scoped_release release;
+                self.CheckLinkStatus(safe_cb);
+            },
+            py::arg("callback"), "Check link status with the outstation");
 }

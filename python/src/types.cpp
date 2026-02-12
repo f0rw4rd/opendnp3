@@ -1,14 +1,21 @@
 /*
- * Copyright 2024-2026 f0rw4rd (experimental fork)
+ * Copyright 2013-2022 Step Function I/O, LLC
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
+ * LLC (https://stepfunc.io) under one or more contributor license agreements.
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership. Green Energy Corp and Step Function I/O LLC license
+ * this file to you under the Apache License, Version 2.0 (the "License"); you
  * may not use this file except in compliance with the License. You may obtain
  * a copy of the License at:
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * This file is part of an experimental fork of opendnp3.
- * See the NOTICE file for upstream copyright attribution.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include "opendnp3/app/AnalogCommandEvent.h"
@@ -18,6 +25,7 @@
 #include "opendnp3/app/ClassField.h"
 #include "opendnp3/app/ControlRelayOutputBlock.h"
 #include "opendnp3/app/DNPTime.h"
+#include "opendnp3/app/DeviceAttributes.h"
 #include "opendnp3/app/Flags.h"
 #include "opendnp3/app/GroupVariationID.h"
 #include "opendnp3/app/IINField.h"
@@ -406,6 +414,30 @@ void init_types(py::module_& m)
         .def(py::init<>())
         .def(py::init<double>(), py::arg("value"))
         .def_readwrite("value", &AnalogInputDeadband::value);
+
+    // DeviceAttrType
+    py::enum_<DeviceAttrType>(m, "DeviceAttrType", "Type codes for device attribute data")
+        .value("VISIBLE_STRING", DeviceAttrType::VISIBLE_STRING)
+        .value("UNSIGNED_INT", DeviceAttrType::UNSIGNED_INT)
+        .value("SIGNED_INT", DeviceAttrType::SIGNED_INT)
+        .value("FLOATING_POINT", DeviceAttrType::FLOATING_POINT)
+        .value("OCTET_STRING", DeviceAttrType::OCTET_STRING)
+        .value("BIT_STRING", DeviceAttrType::BIT_STRING)
+        .value("DNP3_TIME", DeviceAttrType::DNP3_TIME)
+        .value("ATTR_LIST", DeviceAttrType::ATTR_LIST)
+        .value("EXT_ATTR_LIST", DeviceAttrType::EXT_ATTR_LIST);
+
+    // DeviceAttributeValue
+    py::class_<DeviceAttributeValue>(m, "DeviceAttributeValue",
+                                     "Variant-like storage for decoded device attribute values")
+        .def(py::init<>())
+        .def_readwrite("type", &DeviceAttributeValue::type)
+        .def_readwrite("stringValue", &DeviceAttributeValue::stringValue)
+        .def_readwrite("unsignedValue", &DeviceAttributeValue::unsignedValue)
+        .def_readwrite("signedValue", &DeviceAttributeValue::signedValue)
+        .def_readwrite("floatValue", &DeviceAttributeValue::floatValue)
+        .def_readwrite("timeValue", &DeviceAttributeValue::timeValue)
+        .def_readwrite("rawValue", &DeviceAttributeValue::rawValue);
 
     // OctetString
     py::class_<OctetString>(m, "OctetString", "Octet string data (Group110/111)")

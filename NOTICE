@@ -20,4 +20,11 @@ also distributes the following 3rd party software:
 https://github.com/philsquared/Catch (test only dependency)
 	
 Project requires, but specified as a git-submodule:
- * ASIO (https://github.com/chriskohlhoff/asio) 1.10.6 or later 
+ * ASIO (https://github.com/chriskohlhoff/asio) 1.10.6 or later
+
+Optional test-only dependency (NOT distributed, fetched at build time when
+DNP3_INTEROP_TESTS=ON):
+ * stepfunc/dnp3 (https://github.com/stepfunc/dnp3) - proprietary
+   non-commercial evaluation license by Step Function I/O LLC.
+   Used solely for interoperability testing. Not included in any
+   binary distribution of opendnp3.

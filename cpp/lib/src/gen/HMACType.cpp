@@ -1,0 +1,134 @@
+//
+//  _   _         ______    _ _ _   _             _ _ _
+// | \ | |       |  ____|  | (_) | (_)           | | | |
+// |  \| | ___   | |__   __| |_| |_ _ _ __   __ _| | | |
+// | . ` |/ _ \  |  __| / _` | | __| | '_ \ / _` | | | |
+// | |\  | (_) | | |___| (_| | | |_| | | | | (_| |_|_|_|
+// |_| \_|\___/  |______|\__,_|_|\__|_|_| |_|\__, (_|_|_)
+//                                           __/ |
+//                                          |___/
+//
+// This file is auto-generated. Do not edit manually
+//
+// Copyright 2013-2022 Step Function I/O, LLC
+// Modified 2024-2026 f0rw4rd (experimental fork)
+//
+// Licensed to Green Energy Corp (www.greenenergycorp.com) and Step Function I/O
+// LLC (https://stepfunc.io) under one or more contributor license agreements.
+// See the NOTICE file distributed with this work for additional information
+// regarding copyright ownership. Green Energy Corp and Step Function I/O LLC license
+// this file to you under the Apache License, Version 2.0 (the "License"); you
+// may not use this file except in compliance with the License. You may obtain
+// a copy of the License at:
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+#include "opendnp3/gen/HMACType.h"
+
+#include <stdexcept>
+
+namespace opendnp3
+{
+
+uint8_t HMACTypeSpec::to_type(HMACType arg)
+{
+    return static_cast<uint8_t>(arg);
+}
+
+HMACType HMACTypeSpec::from_type(uint8_t arg)
+{
+    switch (arg)
+    {
+    case (0x0):
+        return HMACType::NO_MAC_VALUE;
+    case (0x1):
+        return HMACType::HMAC_SHA1_TRUNC_4;
+    case (0x2):
+        return HMACType::HMAC_SHA1_TRUNC_10;
+    case (0x3):
+        return HMACType::HMAC_SHA256_TRUNC_8;
+    case (0x4):
+        return HMACType::HMAC_SHA256_TRUNC_16;
+    case (0x5):
+        return HMACType::HMAC_SHA1_TRUNC_8;
+    case (0x6):
+        return HMACType::AES_GMAC;
+    default:
+        return HMACType::UNKNOWN;
+    }
+}
+
+char const* HMACTypeSpec::to_string(HMACType arg)
+{
+    switch (arg)
+    {
+    case (HMACType::NO_MAC_VALUE):
+        return "NO_MAC_VALUE";
+    case (HMACType::HMAC_SHA1_TRUNC_4):
+        return "HMAC_SHA1_TRUNC_4";
+    case (HMACType::HMAC_SHA1_TRUNC_10):
+        return "HMAC_SHA1_TRUNC_10";
+    case (HMACType::HMAC_SHA256_TRUNC_8):
+        return "HMAC_SHA256_TRUNC_8";
+    case (HMACType::HMAC_SHA256_TRUNC_16):
+        return "HMAC_SHA256_TRUNC_16";
+    case (HMACType::HMAC_SHA1_TRUNC_8):
+        return "HMAC_SHA1_TRUNC_8";
+    case (HMACType::AES_GMAC):
+        return "AES_GMAC";
+    default:
+        return "UNKNOWN";
+    }
+}
+
+char const* HMACTypeSpec::to_human_string(HMACType arg)
+{
+    switch (arg)
+    {
+    case (HMACType::NO_MAC_VALUE):
+        return "NO_MAC_VALUE";
+    case (HMACType::HMAC_SHA1_TRUNC_4):
+        return "HMAC_SHA1_TRUNC_4";
+    case (HMACType::HMAC_SHA1_TRUNC_10):
+        return "HMAC_SHA1_TRUNC_10";
+    case (HMACType::HMAC_SHA256_TRUNC_8):
+        return "HMAC_SHA256_TRUNC_8";
+    case (HMACType::HMAC_SHA256_TRUNC_16):
+        return "HMAC_SHA256_TRUNC_16";
+    case (HMACType::HMAC_SHA1_TRUNC_8):
+        return "HMAC_SHA1_TRUNC_8";
+    case (HMACType::AES_GMAC):
+        return "AES_GMAC";
+    default:
+        return "UNKNOWN";
+    }
+}
+
+HMACType HMACTypeSpec::from_string(const std::string& arg)
+{
+    if (arg == "NO_MAC_VALUE")
+        return HMACType::NO_MAC_VALUE;
+    if (arg == "HMAC_SHA1_TRUNC_4")
+        return HMACType::HMAC_SHA1_TRUNC_4;
+    if (arg == "HMAC_SHA1_TRUNC_10")
+        return HMACType::HMAC_SHA1_TRUNC_10;
+    if (arg == "HMAC_SHA256_TRUNC_8")
+        return HMACType::HMAC_SHA256_TRUNC_8;
+    if (arg == "HMAC_SHA256_TRUNC_16")
+        return HMACType::HMAC_SHA256_TRUNC_16;
+    if (arg == "HMAC_SHA1_TRUNC_8")
+        return HMACType::HMAC_SHA1_TRUNC_8;
+    if (arg == "AES_GMAC")
+        return HMACType::AES_GMAC;
+    else
+        return HMACType::UNKNOWN;
+}
+
+} // namespace opendnp3

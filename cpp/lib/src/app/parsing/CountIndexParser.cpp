@@ -23,6 +23,7 @@
 #include "app/parsing/BufferedCollection.h"
 #include "gen/objects/Group11.h"
 #include "gen/objects/Group12.h"
+#include "gen/objects/Group122.h"
 #include "gen/objects/Group13.h"
 #include "gen/objects/Group2.h"
 #include "gen/objects/Group22.h"
@@ -248,6 +249,14 @@ ParseResult CountIndexParser::ParseCountOfObjects(ser4cpp::rseq_t& buffer,
         return CountIndexParser::From<Group50Var4>(count, numparser).Process(record, buffer, pHandler, pLogger);
     case (GroupVariation::Group111Var0):
         return ParseIndexPrefixedOctetData(buffer, record, numparser, count, pLogger, pHandler);
+
+    case (GroupVariation::Group113Var0):
+        return ParseIndexPrefixedOctetData(buffer, record, numparser, count, pLogger, pHandler);
+
+    case (GroupVariation::Group122Var1):
+        return CountIndexParser::From<Group122Var1>(count, numparser).Process(record, buffer, pHandler, pLogger);
+    case (GroupVariation::Group122Var2):
+        return CountIndexParser::From<Group122Var2>(count, numparser).Process(record, buffer, pHandler, pLogger);
 
     default:
 

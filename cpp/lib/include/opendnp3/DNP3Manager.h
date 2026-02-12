@@ -59,10 +59,11 @@ public:
      *	@param onThreadStart Action to run when a thread pool thread starts
      *	@param onThreadExit Action to run just before a thread pool thread exits
      */
-    DNP3Manager(uint32_t concurrencyHint,
-                std::shared_ptr<opendnp3::ILogHandler> handler = std::shared_ptr<opendnp3::ILogHandler>(),
-                std::function<void(uint32_t)> onThreadStart = [](uint32_t) {},
-                std::function<void(uint32_t)> onThreadExit = [](uint32_t) {});
+    DNP3Manager(
+        uint32_t concurrencyHint,
+        std::shared_ptr<opendnp3::ILogHandler> handler = std::shared_ptr<opendnp3::ILogHandler>(),
+        std::function<void(uint32_t)> onThreadStart = [](uint32_t) {},
+        std::function<void(uint32_t)> onThreadExit = [](uint32_t) {});
 
     ~DNP3Manager();
 
@@ -89,6 +90,26 @@ public:
                                            const std::vector<IPEndpoint>& hosts,
                                            const std::string& local,
                                            std::shared_ptr<IChannelListener> listener);
+
+    /**
+     * Add a persistent TCP client channel intended for outstation use.
+     * Creates a TCP client that actively connects to a remote master server,
+     * allowing the outstation to operate in TCP client mode.
+     *
+     * @param id Alias that will be used for logging purposes with this channel
+     * @param levels Bitfield that describes the logging level for this channel and associated sessions
+     * @param retry Retry parameters for failed channels
+     * @param hosts List of host addresses to connect to (i.e. 127.0.0.1 or www.example.com)
+     * @param local adapter address on which to attempt the connection (use 0.0.0.0 for all adapters)
+     * @param listener optional callback interface (can be nullptr) for info about the running channel
+     * @return shared_ptr to a channel interface
+     */
+    std::shared_ptr<IChannel> AddOutstationTCPClient(const std::string& id,
+                                                     const opendnp3::LogLevels& levels,
+                                                     const ChannelRetry& retry,
+                                                     const std::vector<IPEndpoint>& hosts,
+                                                     const std::string& local,
+                                                     std::shared_ptr<IChannelListener> listener);
 
     /**
      * Add a persistent TCP server channel. Only accepts a single connection at a time.

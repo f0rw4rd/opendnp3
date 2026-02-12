@@ -137,6 +137,11 @@ void IAPDUHandler::OnHeader(const RangeHeader& header, const ICollection<Indexed
     Record(header, this->ProcessHeader(header, values));
 }
 
+void IAPDUHandler::OnHeader(const RangeHeader& header, const ICollection<Indexed<SecurityStat>>& values)
+{
+    Record(header, this->ProcessHeader(header, values));
+}
+
 // --- index prefixes ----
 
 void IAPDUHandler::OnHeader(const PrefixHeader& header, const ICollection<Indexed<Binary>>& values)
@@ -195,6 +200,11 @@ void IAPDUHandler::OnHeader(const PrefixHeader& header, const ICollection<Indexe
 }
 
 void IAPDUHandler::OnHeader(const PrefixHeader& header, const ICollection<Indexed<AnalogInputDeadband>>& values)
+{
+    Record(header, this->ProcessHeader(header, values));
+}
+
+void IAPDUHandler::OnHeader(const PrefixHeader& header, const ICollection<Indexed<SecurityStat>>& values)
 {
     Record(header, this->ProcessHeader(header, values));
 }
@@ -341,6 +351,12 @@ IINField IAPDUHandler::ProcessHeader(const RangeHeader& /*header*/,
     return ProcessUnsupportedHeader();
 }
 
+IINField IAPDUHandler::ProcessHeader(const RangeHeader& /*header*/,
+                                     const ICollection<Indexed<SecurityStat>>& /*values*/)
+{
+    return ProcessUnsupportedHeader();
+}
+
 /// ---- index prefixes -----
 
 IINField IAPDUHandler::ProcessHeader(const PrefixHeader& /*header*/, const ICollection<Indexed<Counter>>& /*values*/)
@@ -412,6 +428,12 @@ IINField IAPDUHandler::ProcessHeader(const PrefixHeader& /*header*/,
     return ProcessUnsupportedHeader();
 }
 
+IINField IAPDUHandler::ProcessHeader(const PrefixHeader& /*header*/,
+                                     const ICollection<Indexed<SecurityStat>>& /*values*/)
+{
+    return ProcessUnsupportedHeader();
+}
+
 IINField IAPDUHandler::ProcessHeader(const PrefixHeader& /*header*/, const ICollection<uint16_t>& /*values*/)
 {
     return ProcessUnsupportedHeader();
@@ -445,6 +467,166 @@ IINField IAPDUHandler::ProcessHeader(const PrefixHeader& /*header*/,
 
 IINField IAPDUHandler::ProcessHeader(const PrefixHeader& /*header*/,
                                      const ICollection<Indexed<AnalogOutputDouble64>>& /*values*/)
+{
+    return ProcessUnsupportedHeader();
+}
+
+//// --- free-format authentication (Group 120) ----
+
+void IAPDUHandler::OnHeader(const FreeFormatHeader& header, const Group120Var1& value, const ser4cpp::rseq_t& object)
+{
+    Record(header, this->ProcessHeader(header, value, object));
+}
+
+void IAPDUHandler::OnHeader(const FreeFormatHeader& header, const Group120Var2& value, const ser4cpp::rseq_t& object)
+{
+    Record(header, this->ProcessHeader(header, value, object));
+}
+
+void IAPDUHandler::OnHeader(const FreeFormatHeader& header, const Group120Var5& value, const ser4cpp::rseq_t& object)
+{
+    Record(header, this->ProcessHeader(header, value, object));
+}
+
+void IAPDUHandler::OnHeader(const FreeFormatHeader& header, const Group120Var6& value, const ser4cpp::rseq_t& object)
+{
+    Record(header, this->ProcessHeader(header, value, object));
+}
+
+void IAPDUHandler::OnHeader(const FreeFormatHeader& header, const Group120Var7& value, const ser4cpp::rseq_t& object)
+{
+    Record(header, this->ProcessHeader(header, value, object));
+}
+
+void IAPDUHandler::OnHeader(const FreeFormatHeader& header, const Group120Var8& value, const ser4cpp::rseq_t& object)
+{
+    Record(header, this->ProcessHeader(header, value, object));
+}
+
+void IAPDUHandler::OnHeader(const FreeFormatHeader& header, const Group120Var9& value, const ser4cpp::rseq_t& object)
+{
+    Record(header, this->ProcessHeader(header, value, object));
+}
+
+void IAPDUHandler::OnHeader(const FreeFormatHeader& header, const Group120Var10& value, const ser4cpp::rseq_t& object)
+{
+    Record(header, this->ProcessHeader(header, value, object));
+}
+
+void IAPDUHandler::OnHeader(const FreeFormatHeader& header, const Group120Var11& value, const ser4cpp::rseq_t& object)
+{
+    Record(header, this->ProcessHeader(header, value, object));
+}
+
+void IAPDUHandler::OnHeader(const FreeFormatHeader& header, const Group120Var12& value, const ser4cpp::rseq_t& object)
+{
+    Record(header, this->ProcessHeader(header, value, object));
+}
+
+void IAPDUHandler::OnHeader(const FreeFormatHeader& header, const Group120Var13& value, const ser4cpp::rseq_t& object)
+{
+    Record(header, this->ProcessHeader(header, value, object));
+}
+
+void IAPDUHandler::OnHeader(const FreeFormatHeader& header, const Group120Var14& value, const ser4cpp::rseq_t& object)
+{
+    Record(header, this->ProcessHeader(header, value, object));
+}
+
+void IAPDUHandler::OnHeader(const FreeFormatHeader& header, const Group120Var15& value, const ser4cpp::rseq_t& object)
+{
+    Record(header, this->ProcessHeader(header, value, object));
+}
+
+/// --- free-format ProcessHeader defaults ---
+
+IINField IAPDUHandler::ProcessHeader(const FreeFormatHeader& /*header*/,
+                                     const Group120Var1& /*value*/,
+                                     const ser4cpp::rseq_t& /*object*/)
+{
+    return ProcessUnsupportedHeader();
+}
+
+IINField IAPDUHandler::ProcessHeader(const FreeFormatHeader& /*header*/,
+                                     const Group120Var2& /*value*/,
+                                     const ser4cpp::rseq_t& /*object*/)
+{
+    return ProcessUnsupportedHeader();
+}
+
+IINField IAPDUHandler::ProcessHeader(const FreeFormatHeader& /*header*/,
+                                     const Group120Var5& /*value*/,
+                                     const ser4cpp::rseq_t& /*object*/)
+{
+    return ProcessUnsupportedHeader();
+}
+
+IINField IAPDUHandler::ProcessHeader(const FreeFormatHeader& /*header*/,
+                                     const Group120Var6& /*value*/,
+                                     const ser4cpp::rseq_t& /*object*/)
+{
+    return ProcessUnsupportedHeader();
+}
+
+IINField IAPDUHandler::ProcessHeader(const FreeFormatHeader& /*header*/,
+                                     const Group120Var7& /*value*/,
+                                     const ser4cpp::rseq_t& /*object*/)
+{
+    return ProcessUnsupportedHeader();
+}
+
+IINField IAPDUHandler::ProcessHeader(const FreeFormatHeader& /*header*/,
+                                     const Group120Var8& /*value*/,
+                                     const ser4cpp::rseq_t& /*object*/)
+{
+    return ProcessUnsupportedHeader();
+}
+
+IINField IAPDUHandler::ProcessHeader(const FreeFormatHeader& /*header*/,
+                                     const Group120Var9& /*value*/,
+                                     const ser4cpp::rseq_t& /*object*/)
+{
+    return ProcessUnsupportedHeader();
+}
+
+IINField IAPDUHandler::ProcessHeader(const FreeFormatHeader& /*header*/,
+                                     const Group120Var10& /*value*/,
+                                     const ser4cpp::rseq_t& /*object*/)
+{
+    return ProcessUnsupportedHeader();
+}
+
+IINField IAPDUHandler::ProcessHeader(const FreeFormatHeader& /*header*/,
+                                     const Group120Var11& /*value*/,
+                                     const ser4cpp::rseq_t& /*object*/)
+{
+    return ProcessUnsupportedHeader();
+}
+
+IINField IAPDUHandler::ProcessHeader(const FreeFormatHeader& /*header*/,
+                                     const Group120Var12& /*value*/,
+                                     const ser4cpp::rseq_t& /*object*/)
+{
+    return ProcessUnsupportedHeader();
+}
+
+IINField IAPDUHandler::ProcessHeader(const FreeFormatHeader& /*header*/,
+                                     const Group120Var13& /*value*/,
+                                     const ser4cpp::rseq_t& /*object*/)
+{
+    return ProcessUnsupportedHeader();
+}
+
+IINField IAPDUHandler::ProcessHeader(const FreeFormatHeader& /*header*/,
+                                     const Group120Var14& /*value*/,
+                                     const ser4cpp::rseq_t& /*object*/)
+{
+    return ProcessUnsupportedHeader();
+}
+
+IINField IAPDUHandler::ProcessHeader(const FreeFormatHeader& /*header*/,
+                                     const Group120Var15& /*value*/,
+                                     const ser4cpp::rseq_t& /*object*/)
 {
     return ProcessUnsupportedHeader();
 }

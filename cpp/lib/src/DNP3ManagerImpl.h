@@ -60,6 +60,13 @@ public:
                                            const std::string& local,
                                            std::shared_ptr<IChannelListener> listener);
 
+    std::shared_ptr<IChannel> AddOutstationTCPClient(const std::string& id,
+                                                     const opendnp3::LogLevels& levels,
+                                                     const ChannelRetry& retry,
+                                                     const std::vector<IPEndpoint>& hosts,
+                                                     const std::string& local,
+                                                     std::shared_ptr<IChannelListener> listener);
+
     std::shared_ptr<IChannel> AddTCPServer(const std::string& id,
                                            const opendnp3::LogLevels& levels,
                                            ServerAcceptMode mode,

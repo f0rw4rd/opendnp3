@@ -25,6 +25,7 @@
 #include "app/IINValue.h"
 #include "app/Range.h"
 #include "app/parsing/IWhiteList.h"
+#include "gen/objects/Group120.h"
 #include "gen/objects/Group50.h"
 #include "gen/objects/Group51.h"
 #include "gen/objects/Group52.h"
@@ -38,8 +39,11 @@
 #include "opendnp3/app/Indexed.h"
 #include "opendnp3/app/MeasurementTypes.h"
 #include "opendnp3/app/OctetString.h"
+#include "opendnp3/app/SecurityStat.h"
 #include "opendnp3/app/parsing/ICollection.h"
 #include "opendnp3/gen/QualifierCode.h"
+
+#include <ser4cpp/container/SequenceTypes.h>
 
 namespace opendnp3
 {
@@ -77,6 +81,7 @@ public:
     void OnHeader(const RangeHeader& header, const ICollection<Indexed<OctetString>>& values);
     void OnHeader(const RangeHeader& header, const ICollection<Indexed<TimeAndInterval>>& values);
     void OnHeader(const RangeHeader& header, const ICollection<Indexed<AnalogInputDeadband>>& values);
+    void OnHeader(const RangeHeader& header, const ICollection<Indexed<SecurityStat>>& values);
 
     // events
 
@@ -92,6 +97,7 @@ public:
     void OnHeader(const PrefixHeader& header, const ICollection<Indexed<BinaryCommandEvent>>& values);
     void OnHeader(const PrefixHeader& header, const ICollection<Indexed<AnalogCommandEvent>>& values);
     void OnHeader(const PrefixHeader& header, const ICollection<Indexed<AnalogInputDeadband>>& values);
+    void OnHeader(const PrefixHeader& header, const ICollection<Indexed<SecurityStat>>& values);
 
     // adhoc read by index
     void OnHeader(const PrefixHeader& header, const ICollection<uint16_t>& values);
@@ -103,6 +109,22 @@ public:
     void OnHeader(const PrefixHeader& header, const ICollection<Indexed<AnalogOutputInt32>>& values);
     void OnHeader(const PrefixHeader& header, const ICollection<Indexed<AnalogOutputFloat32>>& values);
     void OnHeader(const PrefixHeader& header, const ICollection<Indexed<AnalogOutputDouble64>>& values);
+
+    // free-format authentication objects (Group 120)
+
+    void OnHeader(const FreeFormatHeader& header, const Group120Var1& value, const ser4cpp::rseq_t& object);
+    void OnHeader(const FreeFormatHeader& header, const Group120Var2& value, const ser4cpp::rseq_t& object);
+    void OnHeader(const FreeFormatHeader& header, const Group120Var5& value, const ser4cpp::rseq_t& object);
+    void OnHeader(const FreeFormatHeader& header, const Group120Var6& value, const ser4cpp::rseq_t& object);
+    void OnHeader(const FreeFormatHeader& header, const Group120Var7& value, const ser4cpp::rseq_t& object);
+    void OnHeader(const FreeFormatHeader& header, const Group120Var8& value, const ser4cpp::rseq_t& object);
+    void OnHeader(const FreeFormatHeader& header, const Group120Var9& value, const ser4cpp::rseq_t& object);
+    void OnHeader(const FreeFormatHeader& header, const Group120Var10& value, const ser4cpp::rseq_t& object);
+    void OnHeader(const FreeFormatHeader& header, const Group120Var11& value, const ser4cpp::rseq_t& object);
+    void OnHeader(const FreeFormatHeader& header, const Group120Var12& value, const ser4cpp::rseq_t& object);
+    void OnHeader(const FreeFormatHeader& header, const Group120Var13& value, const ser4cpp::rseq_t& object);
+    void OnHeader(const FreeFormatHeader& header, const Group120Var14& value, const ser4cpp::rseq_t& object);
+    void OnHeader(const FreeFormatHeader& header, const Group120Var15& value, const ser4cpp::rseq_t& object);
 
     // Device attribute callback (Group 0)
     virtual void OnDeviceAttribute(uint8_t set, uint8_t variation, const DeviceAttributeValue& value) {}
@@ -147,6 +169,7 @@ protected:
     virtual IINField ProcessHeader(const RangeHeader& header, const ICollection<Indexed<OctetString>>& values);
     virtual IINField ProcessHeader(const RangeHeader& header, const ICollection<Indexed<TimeAndInterval>>& values);
     virtual IINField ProcessHeader(const RangeHeader& header, const ICollection<Indexed<AnalogInputDeadband>>& values);
+    virtual IINField ProcessHeader(const RangeHeader& header, const ICollection<Indexed<SecurityStat>>& values);
 
     virtual IINField ProcessHeader(const PrefixHeader& header, const ICollection<Indexed<Binary>>& values);
     virtual IINField ProcessHeader(const PrefixHeader& header, const ICollection<Indexed<BinaryOutputStatus>>& values);
@@ -160,6 +183,7 @@ protected:
     virtual IINField ProcessHeader(const PrefixHeader& header, const ICollection<Indexed<BinaryCommandEvent>>& values);
     virtual IINField ProcessHeader(const PrefixHeader& header, const ICollection<Indexed<AnalogCommandEvent>>& values);
     virtual IINField ProcessHeader(const PrefixHeader& header, const ICollection<Indexed<AnalogInputDeadband>>& values);
+    virtual IINField ProcessHeader(const PrefixHeader& header, const ICollection<Indexed<SecurityStat>>& values);
 
     // adhoc read by index
     virtual IINField ProcessHeader(const PrefixHeader& header, const ICollection<uint16_t>& values);
@@ -171,6 +195,48 @@ protected:
     virtual IINField ProcessHeader(const PrefixHeader& header, const ICollection<Indexed<AnalogOutputFloat32>>& values);
     virtual IINField ProcessHeader(const PrefixHeader& header,
                                    const ICollection<Indexed<AnalogOutputDouble64>>& values);
+
+    // free-format authentication objects (Group 120)
+
+    virtual IINField ProcessHeader(const FreeFormatHeader& header,
+                                   const Group120Var1& value,
+                                   const ser4cpp::rseq_t& object);
+    virtual IINField ProcessHeader(const FreeFormatHeader& header,
+                                   const Group120Var2& value,
+                                   const ser4cpp::rseq_t& object);
+    virtual IINField ProcessHeader(const FreeFormatHeader& header,
+                                   const Group120Var5& value,
+                                   const ser4cpp::rseq_t& object);
+    virtual IINField ProcessHeader(const FreeFormatHeader& header,
+                                   const Group120Var6& value,
+                                   const ser4cpp::rseq_t& object);
+    virtual IINField ProcessHeader(const FreeFormatHeader& header,
+                                   const Group120Var7& value,
+                                   const ser4cpp::rseq_t& object);
+    virtual IINField ProcessHeader(const FreeFormatHeader& header,
+                                   const Group120Var8& value,
+                                   const ser4cpp::rseq_t& object);
+    virtual IINField ProcessHeader(const FreeFormatHeader& header,
+                                   const Group120Var9& value,
+                                   const ser4cpp::rseq_t& object);
+    virtual IINField ProcessHeader(const FreeFormatHeader& header,
+                                   const Group120Var10& value,
+                                   const ser4cpp::rseq_t& object);
+    virtual IINField ProcessHeader(const FreeFormatHeader& header,
+                                   const Group120Var11& value,
+                                   const ser4cpp::rseq_t& object);
+    virtual IINField ProcessHeader(const FreeFormatHeader& header,
+                                   const Group120Var12& value,
+                                   const ser4cpp::rseq_t& object);
+    virtual IINField ProcessHeader(const FreeFormatHeader& header,
+                                   const Group120Var13& value,
+                                   const ser4cpp::rseq_t& object);
+    virtual IINField ProcessHeader(const FreeFormatHeader& header,
+                                   const Group120Var14& value,
+                                   const ser4cpp::rseq_t& object);
+    virtual IINField ProcessHeader(const FreeFormatHeader& header,
+                                   const Group120Var15& value,
+                                   const ser4cpp::rseq_t& object);
 
 protected:
     // overridable to receive post processing events for every header

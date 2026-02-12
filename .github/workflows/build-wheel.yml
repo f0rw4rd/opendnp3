@@ -1,4 +1,4 @@
-name: Build and Release opendnp3 Python Wheel
+name: Build and Release yadnp3 Python Wheel
 
 on:
   push:
@@ -92,7 +92,7 @@ jobs:
         run: |
           pip install ./dist/*cp$(echo "${{ matrix.python }}" | tr -d '.')*.whl
           cd /tmp
-          python -c "import opendnp3; print('opendnp3 import OK')"
+          python -c "import opendnp3; print('yadnp3 import OK')"
           python -c "import opendnp3; print(f'DNP3Manager: {opendnp3.DNP3Manager}')"
           python -c "import opendnp3; m = opendnp3.DNP3Manager(1); m.Shutdown(); print('Manager lifecycle OK')"
           python -c "
@@ -164,11 +164,11 @@ jobs:
         run: |
           ls -la dist/
           gh release create "${{ github.ref_name }}" dist/*.whl dist/*.tar.gz \
-            --title "opendnp3 v${PACKAGE_VERSION}" \
+            --title "yadnp3 v${PACKAGE_VERSION}" \
             --notes "$(cat <<EOF
-          ## opendnp3 v${PACKAGE_VERSION}
+          ## yadnp3 v${PACKAGE_VERSION}
 
-          Python bindings for [opendnp3](https://github.com/f0rw4rd/opendnp3) -- IEEE-1815 (DNP3) protocol implementation.
+          Python bindings for [yadnp3](https://github.com/f0rw4rd/opendnp3) -- Yet Another opendnp3 fork (IEEE-1815 DNP3).
 
           ### Supported Platforms
           - Linux x86_64 (manylinux_2_28, Python 3.9-3.13)

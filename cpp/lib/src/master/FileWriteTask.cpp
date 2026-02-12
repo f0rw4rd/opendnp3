@@ -38,6 +38,8 @@ FileWriteTask::FileWriteTask(const std::shared_ptr<TaskContext>& context,
                              const std::string& filename,
                              std::vector<uint8_t> data,
                              FilePermissions permissions,
+                             FileMode mode,
+                             uint32_t authKey,
                              FileWriteCallbackT callback,
                              const Logger& logger,
                              const TaskConfig& config)
@@ -45,6 +47,8 @@ FileWriteTask::FileWriteTask(const std::shared_ptr<TaskContext>& context,
       filename(filename),
       fileData(std::move(data)),
       permissions(permissions),
+      fileMode(mode),
+      authKey(authKey),
       callback(std::move(callback)),
       state(State::OPEN_FILE),
       fileHandle(0),
@@ -122,9 +126,9 @@ bool FileWriteTask::WriteGroup70Var3Open(APDURequest& request)
     }
 
     ser4cpp::UInt16::write_to(wseq, permissions.ToRaw());
-    ser4cpp::UInt32::write_to(wseq, 0);                                      // auth_key
+    ser4cpp::UInt32::write_to(wseq, authKey);                                // auth_key
     ser4cpp::UInt32::write_to(wseq, static_cast<uint32_t>(fileData.size())); // file_size
-    ser4cpp::UInt16::write_to(wseq, static_cast<uint16_t>(FileMode::WRITE)); // mode
+    ser4cpp::UInt16::write_to(wseq, static_cast<uint16_t>(fileMode));        // mode
     ser4cpp::UInt16::write_to(wseq, maxBlockSize);
     ser4cpp::UInt16::write_to(wseq, requestId);
 

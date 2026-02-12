@@ -46,6 +46,7 @@ public:
     FileTransferTask(const std::shared_ptr<TaskContext>& context,
                      IMasterApplication& app,
                      const std::string& filename,
+                     uint32_t authKey,
                      FileReadCallbackT callback,
                      const Logger& logger,
                      const TaskConfig& config);
@@ -103,6 +104,7 @@ private:
     };
 
     const std::string filename;
+    const uint32_t authKey;
     FileReadCallbackT callback;
 
     State state;

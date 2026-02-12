@@ -37,6 +37,7 @@ enum class DeviceAttrType : uint8_t
     OCTET_STRING = 5,
     BIT_STRING = 6,
     DNP3_TIME = 7,
+    UNICODE = 8,
     ATTR_LIST = 254,
     EXT_ATTR_LIST = 255
 };

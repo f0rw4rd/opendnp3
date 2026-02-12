@@ -171,6 +171,9 @@ __pycache__/
 *.egg-info/
 dist/
 
+# Reference materials
+ref/
+
 # AI files
 CLAUDE.md
 .claude/

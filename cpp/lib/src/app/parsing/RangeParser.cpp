@@ -25,6 +25,7 @@
 #include "gen/objects/Group1.h"
 #include "gen/objects/Group10.h"
 #include "gen/objects/Group102.h"
+#include "gen/objects/Group121.h"
 #include "gen/objects/Group20.h"
 #include "gen/objects/Group21.h"
 #include "gen/objects/Group3.h"
@@ -171,10 +172,15 @@ ParseResult RangeParser::ParseRangeOfObjects(
 
         MACRO_PARSE_OBJECTS_WITH_RANGE(Group102Var1);
 
+        MACRO_PARSE_OBJECTS_WITH_RANGE(Group121Var1);
+
     case (GroupVariation::Group80Var1):
         return RangeParser::FromBitfieldType<IINValue>(range).Process(record, buffer, pHandler, pLogger);
 
     case (GroupVariation::Group110Var0):
+        return ParseRangeOfOctetData(buffer, record, range, pLogger, pHandler);
+
+    case (GroupVariation::Group112Var0):
         return ParseRangeOfOctetData(buffer, record, range, pLogger, pHandler);
 
     case (GroupVariation::Group0Var0):
@@ -344,6 +350,12 @@ ParseResult RangeParser::ParseRangeOfDeviceAttributes(
                         attr.timeValue |= static_cast<uint64_t>(payload[j]) << (j * 8);
                     }
                 }
+                break;
+            }
+            case 8: // Unicode
+            {
+                attr.type = DeviceAttrType::UNICODE;
+                attr.stringValue.assign(reinterpret_cast<const char*>(payload), payloadLen);
                 break;
             }
             case 254: // AttrList

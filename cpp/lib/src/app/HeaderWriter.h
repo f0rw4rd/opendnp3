@@ -90,6 +90,13 @@ public:
     PrefixedWriteIterator<PrefixType, WriteType> IterateOverCountWithPrefixAndCTO(
         QualifierCode qc, const DNP3Serializer<WriteType>& serializer, const CTOType& cto);
 
+    /**
+     * Write a single free-format object (qualifier 0x5B).
+     * Format: group(1) + var(1) + qualifier(1) + count(1) + size(2) + object_data
+     * Used for Group 120 SA authentication objects.
+     */
+    bool WriteFreeFormat(const IVariableLength& value);
+
     // record the current position in case we need to rollback
     void Mark();
 
