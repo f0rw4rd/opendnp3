@@ -186,6 +186,22 @@ public:
     {
         PYBIND11_OVERRIDE(DNPTime, IOutstationApplication, Now);
     }
+
+    bool SupportsWriteTimeAndInterval() override
+    {
+        PYBIND11_OVERRIDE(bool, IOutstationApplication, SupportsWriteTimeAndInterval);
+    }
+
+    void RecordClassAssignment(AssignClassType type, PointClass clazz, uint16_t start, uint16_t stop) override
+    {
+        PYBIND11_OVERRIDE(void, IOutstationApplication, RecordClassAssignment, type, clazz, start, stop);
+    }
+
+    void OnConfirmProcessed(bool is_unsolicited, uint32_t num_class1, uint32_t num_class2, uint32_t num_class3) override
+    {
+        PYBIND11_OVERRIDE(void, IOutstationApplication, OnConfirmProcessed, is_unsolicited, num_class1, num_class2,
+                          num_class3);
+    }
 };
 
 // Trampoline for IFileHandler
@@ -267,7 +283,13 @@ void init_outstation(py::module_& m)
         .def("ColdRestartSupport", &IOutstationApplication::ColdRestartSupport)
         .def("WarmRestartSupport", &IOutstationApplication::WarmRestartSupport)
         .def("ColdRestart", &IOutstationApplication::ColdRestart)
-        .def("WarmRestart", &IOutstationApplication::WarmRestart);
+        .def("WarmRestart", &IOutstationApplication::WarmRestart)
+        .def("Now", &IOutstationApplication::Now)
+        .def("SupportsWriteTimeAndInterval", &IOutstationApplication::SupportsWriteTimeAndInterval)
+        .def("RecordClassAssignment", &IOutstationApplication::RecordClassAssignment, py::arg("type"), py::arg("clazz"),
+             py::arg("start"), py::arg("stop"))
+        .def("OnConfirmProcessed", &IOutstationApplication::OnConfirmProcessed, py::arg("is_unsolicited"),
+             py::arg("num_class1"), py::arg("num_class2"), py::arg("num_class3"));
 
     // IFileHandler
     py::class_<IFileHandler, PyFileHandler, std::shared_ptr<IFileHandler>>(

@@ -33,7 +33,7 @@ namespace measurements
         }
 
         double diff = fabs(newMeas.value - oldMeas.value);
-        if (diff == INFINITY)
+        if (std::isinf(diff))
         {
             return true;
         }

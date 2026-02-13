@@ -19,18 +19,43 @@
  */
 
 #include "opendnp3/app/IINField.h"
+#include "opendnp3/gen/AnalogOutputStatusQuality.h"
+#include "opendnp3/gen/AnalogQuality.h"
+#include "opendnp3/gen/AssignClassType.h"
+#include "opendnp3/gen/AuthErrorCode.h"
+#include "opendnp3/gen/BinaryOutputStatusQuality.h"
+#include "opendnp3/gen/BinaryQuality.h"
+#include "opendnp3/gen/CertificateType.h"
+#include "opendnp3/gen/ChallengeReason.h"
 #include "opendnp3/gen/ChannelState.h"
 #include "opendnp3/gen/CommandPointState.h"
 #include "opendnp3/gen/CommandStatus.h"
+#include "opendnp3/gen/CounterQuality.h"
 #include "opendnp3/gen/DoubleBit.h"
+#include "opendnp3/gen/DoubleBitBinaryQuality.h"
+#include "opendnp3/gen/EventAnalogOutputStatusVariation.h"
+#include "opendnp3/gen/EventAnalogVariation.h"
+#include "opendnp3/gen/EventBinaryOutputStatusVariation.h"
+#include "opendnp3/gen/EventBinaryVariation.h"
+#include "opendnp3/gen/EventCounterVariation.h"
+#include "opendnp3/gen/EventDoubleBinaryVariation.h"
+#include "opendnp3/gen/EventFrozenCounterVariation.h"
 #include "opendnp3/gen/EventMode.h"
+#include "opendnp3/gen/EventOctetStringVariation.h"
+#include "opendnp3/gen/EventSecurityStatVariation.h"
 #include "opendnp3/gen/FlagsType.h"
 #include "opendnp3/gen/FlowControl.h"
 #include "opendnp3/gen/FreezeType.h"
+#include "opendnp3/gen/FrozenCounterQuality.h"
 #include "opendnp3/gen/FunctionCode.h"
 #include "opendnp3/gen/GroupVariation.h"
+#include "opendnp3/gen/HMACType.h"
 #include "opendnp3/gen/IndexQualifierMode.h"
 #include "opendnp3/gen/IntervalUnits.h"
+#include "opendnp3/gen/KeyChangeMethod.h"
+#include "opendnp3/gen/KeyStatus.h"
+#include "opendnp3/gen/KeyWrapAlgorithm.h"
+#include "opendnp3/gen/LinkFunction.h"
 #include "opendnp3/gen/LinkStatus.h"
 #include "opendnp3/gen/MasterTaskType.h"
 #include "opendnp3/gen/OperateType.h"
@@ -40,13 +65,28 @@
 #include "opendnp3/gen/QualifierCode.h"
 #include "opendnp3/gen/RestartMode.h"
 #include "opendnp3/gen/RestartType.h"
+#include "opendnp3/gen/SecurityStatIndex.h"
 #include "opendnp3/gen/ServerAcceptMode.h"
+#include "opendnp3/gen/StaticAnalogOutputStatusVariation.h"
+#include "opendnp3/gen/StaticAnalogVariation.h"
+#include "opendnp3/gen/StaticBinaryOutputStatusVariation.h"
+#include "opendnp3/gen/StaticBinaryVariation.h"
+#include "opendnp3/gen/StaticCounterVariation.h"
+#include "opendnp3/gen/StaticDoubleBinaryVariation.h"
+#include "opendnp3/gen/StaticFrozenCounterVariation.h"
+#include "opendnp3/gen/StaticOctetStringVariation.h"
+#include "opendnp3/gen/StaticSecurityStatVariation.h"
+#include "opendnp3/gen/StaticTimeAndIntervalVariation.h"
+#include "opendnp3/gen/StaticTypeBitmask.h"
 #include "opendnp3/gen/StopBits.h"
 #include "opendnp3/gen/TaskCompletion.h"
 #include "opendnp3/gen/TimeSyncMode.h"
 #include "opendnp3/gen/TimestampQuality.h"
 #include "opendnp3/gen/TripCloseCode.h"
+#include "opendnp3/gen/UserOperation.h"
+#include "opendnp3/gen/UserRole.h"
 #include "opendnp3/master/FileOperationResult.h"
+#include "opendnp3/secauth/HMACMode.h"
 
 #include <pybind11/pybind11.h>
 
@@ -545,4 +585,371 @@ void init_enums(py::module_& m)
     py::enum_<FileType>(m, "FileType", "DNP3 file type field")
         .value("DIRECTORY", FileType::DIRECTORY)
         .value("SIMPLE_FILE", FileType::SIMPLE_FILE);
+
+    // ===== Quality Enums =====
+
+    // AnalogQuality
+    py::enum_<AnalogQuality>(m, "AnalogQuality", "Quality field bitmask for analog values")
+        .value("ONLINE", AnalogQuality::ONLINE)
+        .value("RESTART", AnalogQuality::RESTART)
+        .value("COMM_LOST", AnalogQuality::COMM_LOST)
+        .value("REMOTE_FORCED", AnalogQuality::REMOTE_FORCED)
+        .value("LOCAL_FORCED", AnalogQuality::LOCAL_FORCED)
+        .value("OVERRANGE", AnalogQuality::OVERRANGE)
+        .value("REFERENCE_ERR", AnalogQuality::REFERENCE_ERR)
+        .value("RESERVED", AnalogQuality::RESERVED);
+
+    // BinaryQuality
+    py::enum_<BinaryQuality>(m, "BinaryQuality", "Quality field bitmask for binary values")
+        .value("ONLINE", BinaryQuality::ONLINE)
+        .value("RESTART", BinaryQuality::RESTART)
+        .value("COMM_LOST", BinaryQuality::COMM_LOST)
+        .value("REMOTE_FORCED", BinaryQuality::REMOTE_FORCED)
+        .value("LOCAL_FORCED", BinaryQuality::LOCAL_FORCED)
+        .value("CHATTER_FILTER", BinaryQuality::CHATTER_FILTER)
+        .value("RESERVED", BinaryQuality::RESERVED)
+        .value("STATE", BinaryQuality::STATE);
+
+    // AnalogOutputStatusQuality
+    py::enum_<AnalogOutputStatusQuality>(m, "AnalogOutputStatusQuality",
+                                         "Quality field bitmask for analog output status values")
+        .value("ONLINE", AnalogOutputStatusQuality::ONLINE)
+        .value("RESTART", AnalogOutputStatusQuality::RESTART)
+        .value("COMM_LOST", AnalogOutputStatusQuality::COMM_LOST)
+        .value("REMOTE_FORCED", AnalogOutputStatusQuality::REMOTE_FORCED)
+        .value("LOCAL_FORCED", AnalogOutputStatusQuality::LOCAL_FORCED)
+        .value("OVERRANGE", AnalogOutputStatusQuality::OVERRANGE)
+        .value("REFERENCE_ERR", AnalogOutputStatusQuality::REFERENCE_ERR)
+        .value("RESERVED", AnalogOutputStatusQuality::RESERVED);
+
+    // BinaryOutputStatusQuality
+    py::enum_<BinaryOutputStatusQuality>(m, "BinaryOutputStatusQuality",
+                                         "Quality field bitmask for binary output status values")
+        .value("ONLINE", BinaryOutputStatusQuality::ONLINE)
+        .value("RESTART", BinaryOutputStatusQuality::RESTART)
+        .value("COMM_LOST", BinaryOutputStatusQuality::COMM_LOST)
+        .value("REMOTE_FORCED", BinaryOutputStatusQuality::REMOTE_FORCED)
+        .value("LOCAL_FORCED", BinaryOutputStatusQuality::LOCAL_FORCED)
+        .value("RESERVED1", BinaryOutputStatusQuality::RESERVED1)
+        .value("RESERVED2", BinaryOutputStatusQuality::RESERVED2)
+        .value("STATE", BinaryOutputStatusQuality::STATE);
+
+    // CounterQuality
+    py::enum_<CounterQuality>(m, "CounterQuality", "Quality field bitmask for counter values")
+        .value("ONLINE", CounterQuality::ONLINE)
+        .value("RESTART", CounterQuality::RESTART)
+        .value("COMM_LOST", CounterQuality::COMM_LOST)
+        .value("REMOTE_FORCED", CounterQuality::REMOTE_FORCED)
+        .value("LOCAL_FORCED", CounterQuality::LOCAL_FORCED)
+        .value("ROLLOVER", CounterQuality::ROLLOVER)
+        .value("DISCONTINUITY", CounterQuality::DISCONTINUITY)
+        .value("RESERVED", CounterQuality::RESERVED);
+
+    // DoubleBitBinaryQuality
+    py::enum_<DoubleBitBinaryQuality>(m, "DoubleBitBinaryQuality", "Quality field bitmask for double bit binary values")
+        .value("ONLINE", DoubleBitBinaryQuality::ONLINE)
+        .value("RESTART", DoubleBitBinaryQuality::RESTART)
+        .value("COMM_LOST", DoubleBitBinaryQuality::COMM_LOST)
+        .value("REMOTE_FORCED", DoubleBitBinaryQuality::REMOTE_FORCED)
+        .value("LOCAL_FORCED", DoubleBitBinaryQuality::LOCAL_FORCED)
+        .value("CHATTER_FILTER", DoubleBitBinaryQuality::CHATTER_FILTER)
+        .value("STATE1", DoubleBitBinaryQuality::STATE1)
+        .value("STATE2", DoubleBitBinaryQuality::STATE2);
+
+    // FrozenCounterQuality
+    py::enum_<FrozenCounterQuality>(m, "FrozenCounterQuality", "Quality field bitmask for frozen counter values")
+        .value("ONLINE", FrozenCounterQuality::ONLINE)
+        .value("RESTART", FrozenCounterQuality::RESTART)
+        .value("COMM_LOST", FrozenCounterQuality::COMM_LOST)
+        .value("REMOTE_FORCED", FrozenCounterQuality::REMOTE_FORCED)
+        .value("LOCAL_FORCED", FrozenCounterQuality::LOCAL_FORCED)
+        .value("ROLLOVER", FrozenCounterQuality::ROLLOVER)
+        .value("DISCONTINUITY", FrozenCounterQuality::DISCONTINUITY)
+        .value("RESERVED", FrozenCounterQuality::RESERVED);
+
+    // ===== Event Variation Enums =====
+
+    // EventAnalogVariation
+    py::enum_<EventAnalogVariation>(m, "EventAnalogVariation", "Event reporting variation for analog values")
+        .value("Group32Var1", EventAnalogVariation::Group32Var1)
+        .value("Group32Var2", EventAnalogVariation::Group32Var2)
+        .value("Group32Var3", EventAnalogVariation::Group32Var3)
+        .value("Group32Var4", EventAnalogVariation::Group32Var4)
+        .value("Group32Var5", EventAnalogVariation::Group32Var5)
+        .value("Group32Var6", EventAnalogVariation::Group32Var6)
+        .value("Group32Var7", EventAnalogVariation::Group32Var7)
+        .value("Group32Var8", EventAnalogVariation::Group32Var8);
+
+    // EventAnalogOutputStatusVariation
+    py::enum_<EventAnalogOutputStatusVariation>(m, "EventAnalogOutputStatusVariation",
+                                                "Event reporting variation for analog output status")
+        .value("Group42Var1", EventAnalogOutputStatusVariation::Group42Var1)
+        .value("Group42Var2", EventAnalogOutputStatusVariation::Group42Var2)
+        .value("Group42Var3", EventAnalogOutputStatusVariation::Group42Var3)
+        .value("Group42Var4", EventAnalogOutputStatusVariation::Group42Var4)
+        .value("Group42Var5", EventAnalogOutputStatusVariation::Group42Var5)
+        .value("Group42Var6", EventAnalogOutputStatusVariation::Group42Var6)
+        .value("Group42Var7", EventAnalogOutputStatusVariation::Group42Var7)
+        .value("Group42Var8", EventAnalogOutputStatusVariation::Group42Var8);
+
+    // EventBinaryVariation
+    py::enum_<EventBinaryVariation>(m, "EventBinaryVariation", "Event reporting variation for binary values")
+        .value("Group2Var1", EventBinaryVariation::Group2Var1)
+        .value("Group2Var2", EventBinaryVariation::Group2Var2)
+        .value("Group2Var3", EventBinaryVariation::Group2Var3);
+
+    // EventBinaryOutputStatusVariation
+    py::enum_<EventBinaryOutputStatusVariation>(m, "EventBinaryOutputStatusVariation",
+                                                "Event reporting variation for binary output status")
+        .value("Group11Var1", EventBinaryOutputStatusVariation::Group11Var1)
+        .value("Group11Var2", EventBinaryOutputStatusVariation::Group11Var2);
+
+    // EventCounterVariation
+    py::enum_<EventCounterVariation>(m, "EventCounterVariation", "Event reporting variation for counter values")
+        .value("Group22Var1", EventCounterVariation::Group22Var1)
+        .value("Group22Var2", EventCounterVariation::Group22Var2)
+        .value("Group22Var5", EventCounterVariation::Group22Var5)
+        .value("Group22Var6", EventCounterVariation::Group22Var6);
+
+    // EventDoubleBinaryVariation
+    py::enum_<EventDoubleBinaryVariation>(m, "EventDoubleBinaryVariation",
+                                          "Event reporting variation for double bit binary values")
+        .value("Group4Var1", EventDoubleBinaryVariation::Group4Var1)
+        .value("Group4Var2", EventDoubleBinaryVariation::Group4Var2)
+        .value("Group4Var3", EventDoubleBinaryVariation::Group4Var3);
+
+    // EventFrozenCounterVariation
+    py::enum_<EventFrozenCounterVariation>(m, "EventFrozenCounterVariation",
+                                           "Event reporting variation for frozen counter values")
+        .value("Group23Var1", EventFrozenCounterVariation::Group23Var1)
+        .value("Group23Var2", EventFrozenCounterVariation::Group23Var2)
+        .value("Group23Var5", EventFrozenCounterVariation::Group23Var5)
+        .value("Group23Var6", EventFrozenCounterVariation::Group23Var6);
+
+    // EventOctetStringVariation
+    py::enum_<EventOctetStringVariation>(m, "EventOctetStringVariation", "Event reporting variation for octet strings")
+        .value("Group111Var0", EventOctetStringVariation::Group111Var0);
+
+    // EventSecurityStatVariation
+    py::enum_<EventSecurityStatVariation>(m, "EventSecurityStatVariation",
+                                          "Event reporting variation for security statistics")
+        .value("Group122Var1", EventSecurityStatVariation::Group122Var1)
+        .value("Group122Var2", EventSecurityStatVariation::Group122Var2);
+
+    // ===== Static Variation Enums =====
+
+    // StaticAnalogVariation
+    py::enum_<StaticAnalogVariation>(m, "StaticAnalogVariation", "Static reporting variation for analog values")
+        .value("Group30Var1", StaticAnalogVariation::Group30Var1)
+        .value("Group30Var2", StaticAnalogVariation::Group30Var2)
+        .value("Group30Var3", StaticAnalogVariation::Group30Var3)
+        .value("Group30Var4", StaticAnalogVariation::Group30Var4)
+        .value("Group30Var5", StaticAnalogVariation::Group30Var5)
+        .value("Group30Var6", StaticAnalogVariation::Group30Var6);
+
+    // StaticAnalogOutputStatusVariation
+    py::enum_<StaticAnalogOutputStatusVariation>(m, "StaticAnalogOutputStatusVariation",
+                                                 "Static reporting variation for analog output status")
+        .value("Group40Var1", StaticAnalogOutputStatusVariation::Group40Var1)
+        .value("Group40Var2", StaticAnalogOutputStatusVariation::Group40Var2)
+        .value("Group40Var3", StaticAnalogOutputStatusVariation::Group40Var3)
+        .value("Group40Var4", StaticAnalogOutputStatusVariation::Group40Var4);
+
+    // StaticBinaryVariation
+    py::enum_<StaticBinaryVariation>(m, "StaticBinaryVariation", "Static reporting variation for binary values")
+        .value("Group1Var1", StaticBinaryVariation::Group1Var1)
+        .value("Group1Var2", StaticBinaryVariation::Group1Var2);
+
+    // StaticBinaryOutputStatusVariation
+    py::enum_<StaticBinaryOutputStatusVariation>(m, "StaticBinaryOutputStatusVariation",
+                                                 "Static reporting variation for binary output status")
+        .value("Group10Var2", StaticBinaryOutputStatusVariation::Group10Var2);
+
+    // StaticCounterVariation
+    py::enum_<StaticCounterVariation>(m, "StaticCounterVariation", "Static reporting variation for counter values")
+        .value("Group20Var1", StaticCounterVariation::Group20Var1)
+        .value("Group20Var2", StaticCounterVariation::Group20Var2)
+        .value("Group20Var5", StaticCounterVariation::Group20Var5)
+        .value("Group20Var6", StaticCounterVariation::Group20Var6);
+
+    // StaticDoubleBinaryVariation
+    py::enum_<StaticDoubleBinaryVariation>(m, "StaticDoubleBinaryVariation",
+                                           "Static reporting variation for double bit binary values")
+        .value("Group3Var2", StaticDoubleBinaryVariation::Group3Var2);
+
+    // StaticFrozenCounterVariation
+    py::enum_<StaticFrozenCounterVariation>(m, "StaticFrozenCounterVariation",
+                                            "Static reporting variation for frozen counter values")
+        .value("Group21Var1", StaticFrozenCounterVariation::Group21Var1)
+        .value("Group21Var2", StaticFrozenCounterVariation::Group21Var2)
+        .value("Group21Var5", StaticFrozenCounterVariation::Group21Var5)
+        .value("Group21Var6", StaticFrozenCounterVariation::Group21Var6)
+        .value("Group21Var9", StaticFrozenCounterVariation::Group21Var9)
+        .value("Group21Var10", StaticFrozenCounterVariation::Group21Var10);
+
+    // StaticOctetStringVariation
+    py::enum_<StaticOctetStringVariation>(m, "StaticOctetStringVariation",
+                                          "Static reporting variation for octet strings")
+        .value("Group110Var0", StaticOctetStringVariation::Group110Var0);
+
+    // StaticTimeAndIntervalVariation
+    py::enum_<StaticTimeAndIntervalVariation>(m, "StaticTimeAndIntervalVariation",
+                                              "Static reporting variation for time and interval")
+        .value("Group50Var4", StaticTimeAndIntervalVariation::Group50Var4);
+
+    // StaticSecurityStatVariation
+    py::enum_<StaticSecurityStatVariation>(m, "StaticSecurityStatVariation",
+                                           "Static reporting variation for security statistics")
+        .value("Group121Var1", StaticSecurityStatVariation::Group121Var1);
+
+    // ===== Other Enums =====
+
+    // AssignClassType
+    py::enum_<AssignClassType>(m, "AssignClassType", "Groups that can be used with the ASSIGN_CLASS function code")
+        .value("BinaryInput", AssignClassType::BinaryInput)
+        .value("DoubleBinaryInput", AssignClassType::DoubleBinaryInput)
+        .value("Counter", AssignClassType::Counter)
+        .value("FrozenCounter", AssignClassType::FrozenCounter)
+        .value("AnalogInput", AssignClassType::AnalogInput)
+        .value("BinaryOutputStatus", AssignClassType::BinaryOutputStatus)
+        .value("AnalogOutputStatus", AssignClassType::AnalogOutputStatus);
+
+    // StaticTypeBitmask
+    py::enum_<StaticTypeBitmask>(m, "StaticTypeBitmask", "Bitmask values for all the static types")
+        .value("BinaryInput", StaticTypeBitmask::BinaryInput)
+        .value("DoubleBinaryInput", StaticTypeBitmask::DoubleBinaryInput)
+        .value("Counter", StaticTypeBitmask::Counter)
+        .value("FrozenCounter", StaticTypeBitmask::FrozenCounter)
+        .value("AnalogInput", StaticTypeBitmask::AnalogInput)
+        .value("BinaryOutputStatus", StaticTypeBitmask::BinaryOutputStatus)
+        .value("AnalogOutputStatus", StaticTypeBitmask::AnalogOutputStatus)
+        .value("TimeAndInterval", StaticTypeBitmask::TimeAndInterval)
+        .value("OctetString", StaticTypeBitmask::OctetString)
+        .value("SecurityStatistic", StaticTypeBitmask::SecurityStatistic);
+
+    // LinkFunction
+    py::enum_<LinkFunction>(m, "LinkFunction", "Link layer function code enumeration")
+        .value("PRI_RESET_LINK_STATES", LinkFunction::PRI_RESET_LINK_STATES)
+        .value("PRI_TEST_LINK_STATES", LinkFunction::PRI_TEST_LINK_STATES)
+        .value("PRI_CONFIRMED_USER_DATA", LinkFunction::PRI_CONFIRMED_USER_DATA)
+        .value("PRI_UNCONFIRMED_USER_DATA", LinkFunction::PRI_UNCONFIRMED_USER_DATA)
+        .value("PRI_REQUEST_LINK_STATUS", LinkFunction::PRI_REQUEST_LINK_STATUS)
+        .value("SEC_ACK", LinkFunction::SEC_ACK)
+        .value("SEC_NACK", LinkFunction::SEC_NACK)
+        .value("SEC_LINK_STATUS", LinkFunction::SEC_LINK_STATUS)
+        .value("SEC_NOT_SUPPORTED", LinkFunction::SEC_NOT_SUPPORTED)
+        .value("INVALID", LinkFunction::INVALID);
+
+    // HMACMode
+    py::enum_<HMACMode>(m, "HMACMode", "Configured HMAC mode for SA5")
+        .value("SHA1_TRUNC_10", HMACMode::SHA1_TRUNC_10)
+        .value("SHA1_TRUNC_8", HMACMode::SHA1_TRUNC_8)
+        .value("SHA256_TRUNC_8", HMACMode::SHA256_TRUNC_8)
+        .value("SHA256_TRUNC_16", HMACMode::SHA256_TRUNC_16);
+
+    // ===== Secure Authentication Enums =====
+
+    // AuthErrorCode
+    py::enum_<AuthErrorCode>(m, "AuthErrorCode", "Secure authentication error codes")
+        .value("AUTHENTICATION_FAILED", AuthErrorCode::AUTHENTICATION_FAILED)
+        .value("UNEXPECTED_RESPONSE", AuthErrorCode::UNEXPECTED_RESPONSE)
+        .value("NO_RESPONSE", AuthErrorCode::NO_RESPONSE)
+        .value("AGGRESSIVE_MODE_UNSUPPORTED", AuthErrorCode::AGGRESSIVE_MODE_UNSUPPORTED)
+        .value("MAC_NOT_SUPPORTED", AuthErrorCode::MAC_NOT_SUPPORTED)
+        .value("KEY_WRAP_NOT_SUPPORTED", AuthErrorCode::KEY_WRAP_NOT_SUPPORTED)
+        .value("AUTHORIZATION_FAILED", AuthErrorCode::AUTHORIZATION_FAILED)
+        .value("UPDATE_KEY_METHOD_NOT_PERMITTED", AuthErrorCode::UPDATE_KEY_METHOD_NOT_PERMITTED)
+        .value("INVALID_SIGNATURE", AuthErrorCode::INVALID_SIGNATURE)
+        .value("INVALID_CERTIFICATION_DATA", AuthErrorCode::INVALID_CERTIFICATION_DATA)
+        .value("UNKNOWN_USER", AuthErrorCode::UNKNOWN_USER)
+        .value("MAX_SESSION_KEY_STATUS_REQUESTS_EXCEEDED", AuthErrorCode::MAX_SESSION_KEY_STATUS_REQUESTS_EXCEEDED)
+        .value("UNKNOWN", AuthErrorCode::UNKNOWN);
+
+    // CertificateType
+    py::enum_<CertificateType>(m, "CertificateType", "Secure authentication certificate types")
+        .value("ID_CERTIFICATE", CertificateType::ID_CERTIFICATE)
+        .value("ATTRIBUTE_CERTIFICATE", CertificateType::ATTRIBUTE_CERTIFICATE)
+        .value("UNKNOWN", CertificateType::UNKNOWN);
+
+    // ChallengeReason
+    py::enum_<ChallengeReason>(m, "ChallengeReason", "Secure authentication challenge reasons")
+        .value("CRITICAL", ChallengeReason::CRITICAL)
+        .value("UNKNOWN", ChallengeReason::UNKNOWN);
+
+    // HMACType
+    py::enum_<HMACType>(m, "HMACType", "Secure authentication HMAC algorithm types")
+        .value("NO_MAC_VALUE", HMACType::NO_MAC_VALUE)
+        .value("HMAC_SHA1_TRUNC_4", HMACType::HMAC_SHA1_TRUNC_4)
+        .value("HMAC_SHA1_TRUNC_10", HMACType::HMAC_SHA1_TRUNC_10)
+        .value("HMAC_SHA256_TRUNC_8", HMACType::HMAC_SHA256_TRUNC_8)
+        .value("HMAC_SHA256_TRUNC_16", HMACType::HMAC_SHA256_TRUNC_16)
+        .value("HMAC_SHA1_TRUNC_8", HMACType::HMAC_SHA1_TRUNC_8)
+        .value("AES_GMAC", HMACType::AES_GMAC)
+        .value("UNKNOWN", HMACType::UNKNOWN);
+
+    // KeyChangeMethod
+    py::enum_<KeyChangeMethod>(m, "KeyChangeMethod", "Secure authentication key change methods")
+        .value("AES_128_SHA1_HMAC", KeyChangeMethod::AES_128_SHA1_HMAC)
+        .value("AES_256_SHA256_HMAC", KeyChangeMethod::AES_256_SHA256_HMAC)
+        .value("AES_256_AES_GMAC", KeyChangeMethod::AES_256_AES_GMAC)
+        .value("RSA_1024_DSA_SHA1_HMAC_SHA1", KeyChangeMethod::RSA_1024_DSA_SHA1_HMAC_SHA1)
+        .value("RSA_2048_DSA_SHA256_HMAC_SHA256", KeyChangeMethod::RSA_2048_DSA_SHA256_HMAC_SHA256)
+        .value("RSA_3072_DSA_SHA256_HMAC_SHA256", KeyChangeMethod::RSA_3072_DSA_SHA256_HMAC_SHA256)
+        .value("RSA_2048_DSA_SHA256_AES_GMAC", KeyChangeMethod::RSA_2048_DSA_SHA256_AES_GMAC)
+        .value("RSA_3072_DSA_SHA256_AES_GMAC", KeyChangeMethod::RSA_3072_DSA_SHA256_AES_GMAC)
+        .value("UNDEFINED", KeyChangeMethod::UNDEFINED);
+
+    // KeyStatus
+    py::enum_<KeyStatus>(m, "KeyStatus", "Secure authentication key status")
+        .value("OK", KeyStatus::OK)
+        .value("NOT_INIT", KeyStatus::NOT_INIT)
+        .value("COMM_FAIL", KeyStatus::COMM_FAIL)
+        .value("AUTH_FAIL", KeyStatus::AUTH_FAIL)
+        .value("UNDEFINED", KeyStatus::UNDEFINED);
+
+    // KeyWrapAlgorithm
+    py::enum_<KeyWrapAlgorithm>(m, "KeyWrapAlgorithm", "Secure authentication key wrap algorithms")
+        .value("AES_128", KeyWrapAlgorithm::AES_128)
+        .value("AES_256", KeyWrapAlgorithm::AES_256)
+        .value("UNDEFINED", KeyWrapAlgorithm::UNDEFINED);
+
+    // SecurityStatIndex
+    py::enum_<SecurityStatIndex>(m, "SecurityStatIndex", "Indices for security statistics")
+        .value("UNEXPECTED_MESSAGES", SecurityStatIndex::UNEXPECTED_MESSAGES)
+        .value("AUTHORIZATION_FAILURES", SecurityStatIndex::AUTHORIZATION_FAILURES)
+        .value("AUTHENTICATION_FAILURES", SecurityStatIndex::AUTHENTICATION_FAILURES)
+        .value("REPLY_TIMEOUTS", SecurityStatIndex::REPLY_TIMEOUTS)
+        .value("REKEYS_DUE_TO_AUTH_FAILURE", SecurityStatIndex::REKEYS_DUE_TO_AUTH_FAILURE)
+        .value("TOTAL_MESSAGES_TX", SecurityStatIndex::TOTAL_MESSAGES_TX)
+        .value("TOTAL_MESSAGES_RX", SecurityStatIndex::TOTAL_MESSAGES_RX)
+        .value("CRITICAL_MESSAGES_TX", SecurityStatIndex::CRITICAL_MESSAGES_TX)
+        .value("CRITICAL_MESSAGES_RX", SecurityStatIndex::CRITICAL_MESSAGES_RX)
+        .value("DISCARDED_MESSAGES", SecurityStatIndex::DISCARDED_MESSAGES)
+        .value("ERROR_MESSAGES_TX", SecurityStatIndex::ERROR_MESSAGES_TX)
+        .value("ERROR_MESSAGES_RX", SecurityStatIndex::ERROR_MESSAGES_RX)
+        .value("SUCCESSFUL_AUTHS", SecurityStatIndex::SUCCESSFUL_AUTHS)
+        .value("SESSION_KEY_CHANGES", SecurityStatIndex::SESSION_KEY_CHANGES)
+        .value("FAILED_SESSION_KEY_CHANGES", SecurityStatIndex::FAILED_SESSION_KEY_CHANGES)
+        .value("UPDATE_KEY_CHANGES", SecurityStatIndex::UPDATE_KEY_CHANGES)
+        .value("FAILED_UPDATE_KEY_CHANGES", SecurityStatIndex::FAILED_UPDATE_KEY_CHANGES)
+        .value("REKEYS_DUE_TO_RESTART", SecurityStatIndex::REKEYS_DUE_TO_RESTART);
+
+    // UserOperation
+    py::enum_<UserOperation>(m, "UserOperation", "Secure authentication user operations")
+        .value("OP_ADD", UserOperation::OP_ADD)
+        .value("OP_DELETE", UserOperation::OP_DELETE)
+        .value("OP_CHANGE", UserOperation::OP_CHANGE)
+        .value("OP_UNDEFINED", UserOperation::OP_UNDEFINED);
+
+    // UserRole
+    py::enum_<UserRole>(m, "UserRole", "Secure authentication user roles")
+        .value("VIEWER", UserRole::VIEWER)
+        .value("OPERATOR", UserRole::OPERATOR)
+        .value("ENGINEER", UserRole::ENGINEER)
+        .value("INSTALLER", UserRole::INSTALLER)
+        .value("SECADM", UserRole::SECADM)
+        .value("SECAUD", UserRole::SECAUD)
+        .value("RBACMNT", UserRole::RBACMNT)
+        .value("SINGLE_USER", UserRole::SINGLE_USER)
+        .value("UNDEFINED", UserRole::UNDEFINED);
 }

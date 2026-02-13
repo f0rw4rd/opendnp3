@@ -4,14 +4,49 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "yadnp3"
-version = "3.1.2.1"
+version = "3.2.0.1"
 description = "Python bindings for yadnp3 -- Yet Another opendnp3 fork (IEEE-1815 DNP3 protocol)"
 readme = "../README.md"
 license = "Apache-2.0"
 requires-python = ">=3.9"
+authors = [
+    { name = "f0rw4rd" }
+]
+keywords = [
+    "dnp3",
+    "ieee-1815",
+    "scada",
+    "protocol",
+    "power-systems",
+    "ics",
+    "industrial-control",
+    "outstation",
+    "master"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Networking",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
+]
 
 [project.optional-dependencies]
 test = ["pytest>=7"]
+
+[project.urls]
+Homepage = "https://github.com/f0rw4rd/opendnp3"
+Repository = "https://github.com/f0rw4rd/opendnp3"
+Issues = "https://github.com/f0rw4rd/opendnp3/issues"
 
 [tool.scikit-build]
 cmake.source-dir = ".."

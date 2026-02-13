@@ -32,6 +32,7 @@
 #include "opendnp3/app/Indexed.h"
 #include "opendnp3/app/MeasurementTypes.h"
 #include "opendnp3/app/OctetString.h"
+#include "opendnp3/app/SecurityStat.h"
 #include "opendnp3/channel/ChannelRetry.h"
 #include "opendnp3/channel/IPEndpoint.h"
 #include "opendnp3/channel/SerialSettings.h"
@@ -56,6 +57,13 @@
 #include "opendnp3/outstation/OutstationParams.h"
 #include "opendnp3/outstation/OutstationStackConfig.h"
 #include "opendnp3/outstation/UpdateBuilder.h"
+#include "opendnp3/secauth/CriticalFunctions.h"
+#include "opendnp3/secauth/HMACMode.h"
+#include "opendnp3/secauth/MasterAuthSettings.h"
+#include "opendnp3/secauth/MasterAuthStackConfig.h"
+#include "opendnp3/secauth/OutstationAuthSettings.h"
+#include "opendnp3/secauth/OutstationAuthStackConfig.h"
+#include "opendnp3/secauth/StatThresholds.h"
 #include "opendnp3/util/TimeDuration.h"
 #include "opendnp3/util/UTCTimestamp.h"
 
@@ -415,6 +423,22 @@ void init_types(py::module_& m)
         .def(py::init<double>(), py::arg("value"))
         .def_readwrite("value", &AnalogInputDeadband::value);
 
+    // SecurityStat
+    py::class_<SecurityStat::Value>(m, "SecurityStatValue", "SecurityStat value containing assocId and count")
+        .def(py::init<>())
+        .def_readwrite("assocId", &SecurityStat::Value::assocId)
+        .def_readwrite("count", &SecurityStat::Value::count);
+
+    py::class_<SecurityStat>(m, "SecurityStat", "Security statistic measurement (Group121/122)")
+        .def(py::init<>())
+        .def(py::init<SecurityStat::Value, uint8_t, DNPTime>(), py::arg("value"), py::arg("quality"), py::arg("time"))
+        .def(py::init<uint8_t, uint16_t, uint32_t>(), py::arg("quality"), py::arg("assocId"), py::arg("count"))
+        .def(py::init<uint8_t, uint16_t, uint32_t, DNPTime>(), py::arg("quality"), py::arg("assocId"), py::arg("count"),
+             py::arg("time"))
+        .def_readwrite("quality", &SecurityStat::quality)
+        .def_readwrite("value", &SecurityStat::value)
+        .def_readwrite("time", &SecurityStat::time);
+
     // DeviceAttrType
     py::enum_<DeviceAttrType>(m, "DeviceAttrType", "Type codes for device attribute data")
         .value("VISIBLE_STRING", DeviceAttrType::VISIBLE_STRING)
@@ -521,6 +545,12 @@ void init_types(py::module_& m)
         .def(py::init<const AnalogInputDeadband&, uint16_t>(), py::arg("value"), py::arg("index"))
         .def_readwrite("value", &Indexed<AnalogInputDeadband>::value)
         .def_readwrite("index", &Indexed<AnalogInputDeadband>::index);
+
+    py::class_<Indexed<SecurityStat>>(m, "IndexedSecurityStat", "Indexed SecurityStat measurement")
+        .def(py::init<>())
+        .def(py::init<const SecurityStat&, uint16_t>(), py::arg("value"), py::arg("index"))
+        .def_readwrite("value", &Indexed<SecurityStat>::value)
+        .def_readwrite("index", &Indexed<SecurityStat>::index);
 
     // Command types
     py::class_<ControlRelayOutputBlock>(m, "ControlRelayOutputBlock", "CROB command")
@@ -817,4 +847,70 @@ void init_types(py::module_& m)
         .def(py::init<>())
         .def_readwrite("status", &FileAuthResult::status)
         .def_readwrite("authKey", &FileAuthResult::authKey);
+
+    // ===== Secure Authentication Config Types =====
+
+    // CriticalFunctions
+    py::class_<CriticalFunctions>(m, "CriticalFunctions", "Controls which function codes require authentication")
+        .def_static("AuthOptional", &CriticalFunctions::AuthOptional)
+        .def_static("AuthEverything", &CriticalFunctions::AuthEverything)
+        .def("IsCritical", &CriticalFunctions::IsCritical, py::arg("code"))
+        .def_readwrite("authConfirm", &CriticalFunctions::authConfirm)
+        .def_readwrite("authRead", &CriticalFunctions::authRead)
+        .def_readwrite("authImmediateFreeze", &CriticalFunctions::authImmediateFreeze)
+        .def_readwrite("authImmediateFreezeNR", &CriticalFunctions::authImmediateFreezeNR)
+        .def_readwrite("authFreezeClear", &CriticalFunctions::authFreezeClear)
+        .def_readwrite("authFreezeClearNR", &CriticalFunctions::authFreezeClearNR)
+        .def_readwrite("authFreezeAtTime", &CriticalFunctions::authFreezeAtTime)
+        .def_readwrite("authFreezeAtTimeNR", &CriticalFunctions::authFreezeAtTimeNR)
+        .def_readwrite("authInitData", &CriticalFunctions::authInitData)
+        .def_readwrite("authAssignClass", &CriticalFunctions::authAssignClass)
+        .def_readwrite("authDelayMeasure", &CriticalFunctions::authDelayMeasure)
+        .def_readwrite("authResponse", &CriticalFunctions::authResponse)
+        .def_readwrite("authUnsolicited", &CriticalFunctions::authUnsolicited);
+
+    // StatThresholds
+    py::class_<StatThresholds>(m, "StatThresholds", "Deadband thresholds for security statistics")
+        .def(py::init<>())
+        .def("GetDeadband", &StatThresholds::GetDeadband, py::arg("index"))
+        .def("Set", &StatThresholds::Set, py::arg("index"), py::arg("threshold"));
+
+    // MasterAuthSettings
+    py::class_<MasterAuthSettings>(m, "MasterAuthSettings", "Master secure authentication settings")
+        .def(py::init<>())
+        .def_readwrite("challengeTimeout", &MasterAuthSettings::challengeTimeout)
+        .def_readwrite("challengeSize", &MasterAuthSettings::challengeSize)
+        .def_readwrite("hmacMode", &MasterAuthSettings::hmacMode)
+        .def_readwrite("maxAuthMsgCount", &MasterAuthSettings::maxAuthMsgCount)
+        .def_readwrite("sessionKeyTimeout", &MasterAuthSettings::sessionKeyTimeout)
+        .def_readwrite("sessionChangeInterval", &MasterAuthSettings::sessionChangeInterval);
+
+    // OutstationAuthSettings
+    py::class_<OutstationAuthSettings>(m, "OutstationAuthSettings", "Outstation secure authentication settings")
+        .def(py::init<>())
+        .def_readwrite("outstationName", &OutstationAuthSettings::outstationName)
+        .def_readwrite("challengeTimeout", &OutstationAuthSettings::challengeTimeout)
+        .def_readwrite("challengeSize", &OutstationAuthSettings::challengeSize)
+        .def_readwrite("sessionKeyChangeChallengeSize", &OutstationAuthSettings::sessionKeyChangeChallengeSize)
+        .def_readwrite("updateKeyChangeChallengeSize", &OutstationAuthSettings::updateKeyChangeChallengeSize)
+        .def_readwrite("assocId", &OutstationAuthSettings::assocId)
+        .def_readwrite("hmacMode", &OutstationAuthSettings::hmacMode)
+        .def_readwrite("functions", &OutstationAuthSettings::functions)
+        .def_readwrite("maxAuthMsgCount", &OutstationAuthSettings::maxAuthMsgCount)
+        .def_readwrite("sessionKeyTimeout", &OutstationAuthSettings::sessionKeyTimeout)
+        .def_readwrite("statThresholds", &OutstationAuthSettings::statThresholds);
+
+    // MasterAuthStackConfig
+    py::class_<MasterAuthStackConfig>(m, "MasterAuthStackConfig", "Complete master auth stack configuration")
+        .def(py::init<>())
+        .def_readwrite("master", &MasterAuthStackConfig::master)
+        .def_readwrite("link", &MasterAuthStackConfig::link)
+        .def_readwrite("auth", &MasterAuthStackConfig::auth);
+
+    // OutstationAuthStackConfig
+    py::class_<OutstationAuthStackConfig>(m, "OutstationAuthStackConfig",
+                                          "Complete outstation auth stack configuration")
+        .def(py::init<>())
+        .def_readwrite("outstation", &OutstationAuthStackConfig::outstation)
+        .def_readwrite("auth", &OutstationAuthStackConfig::auth);
 }

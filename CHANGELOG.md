@@ -1,3 +1,16 @@
+### 3.2.0.1 (f0rw4rd fork) ###
+
+Bug fixes:
+* Fix missing `case (120)` in GroupVariationRecord::GetType() for SA Group120 objects
+* Fix `EventTriggers` using `== INFINITY` instead of `std::isinf()` for deadband comparison
+* Consolidate duplicate pyproject.toml into single python/pyproject.toml
+
+Python bindings:
+* Add ~30 missing enum bindings (quality, variation, SA, and other enums)
+* Add SecurityStat type and Indexed<SecurityStat> bindings
+* Add SA config types (CriticalFunctions, StatThresholds, MasterAuthSettings, OutstationAuthSettings, MasterAuthStackConfig, OutstationAuthStackConfig)
+* Add missing IOutstationApplication methods (SupportsWriteTimeAndInterval, RecordClassAssignment, OnConfirmProcessed)
+
 ### 3.1.2.1 (f0rw4rd fork) ###
 
 New features:
