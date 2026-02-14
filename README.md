@@ -35,9 +35,8 @@ The upstream project reached end-of-life on September 1, 2022. This fork extends
 - TLS (client and server, requires OpenSSL)
 
 **Bindings:**
-- **Python** (pybind11) — `pip install yadnp3`
-- **Java** (JNI)
-- **.NET** (C++/CLI, Windows)
+- **Python** (pybind11) — `pip install yadnp3` (**primary focus** of this fork)
+- Java (JNI) and .NET (C++/CLI) bindings exist from upstream but are **not actively maintained** in this fork
 
 ## Python Quick Start
 
@@ -83,8 +82,8 @@ ctest --output-on-failure
 | `DNP3_TESTS` | OFF | Unit and integration tests |
 | `DNP3_EXAMPLES` | OFF | Example applications |
 | `DNP3_PYTHON` | OFF | Python bindings (pybind11) |
-| `DNP3_JAVA` | OFF | Java JNI bindings |
-| `DNP3_DOTNET` | OFF | .NET bindings (Windows) |
+| `DNP3_JAVA` | OFF | Java JNI bindings (upstream, not maintained) |
+| `DNP3_DOTNET` | OFF | .NET bindings (upstream, Windows, not maintained) |
 | `DNP3_STATIC_LIBS` | platform | Static libraries |
 | `DNP3_EVERYTHING` | OFF | All optional targets |
 
@@ -107,9 +106,9 @@ yadnp3/
 │   └── src/              Private implementation
 ├── cpp/tests/            Unit, integration, and interop tests
 ├── cpp/examples/         Example master/outstation applications
-├── python/               Python bindings (pybind11)
-├── java/                 Java bindings (JNI + Maven)
-├── dotnet/               .NET bindings (C++/CLI)
+├── python/               Python bindings (pybind11, actively maintained)
+├── java/                 Java bindings (JNI + Maven, upstream, not maintained)
+├── dotnet/               .NET bindings (C++/CLI, upstream, not maintained)
 ├── generation/           Code generation (Scala/SBT)
 ├── Dockerfile            Linux wheel build
 └── .github/workflows/    CI (build, test, wheel packaging)

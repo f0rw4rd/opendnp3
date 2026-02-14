@@ -31,6 +31,8 @@ namespace py = pybind11;
 using namespace opendnp3;
 
 // Trampoline for ICommandHandler
+// All overrides are wrapped in try/catch so that Python exceptions on ASIO
+// strand threads are safely discarded instead of causing std::terminate().
 class PyCommandHandler : public ICommandHandler
 {
 public:
@@ -38,16 +40,51 @@ public:
 
     void Begin() override
     {
-        PYBIND11_OVERRIDE_PURE(void, ICommandHandler, Begin);
+        try
+        {
+            PYBIND11_OVERRIDE_PURE(void, ICommandHandler, Begin);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyCommandHandler::Begin");
+        }
+        catch (const std::exception&)
+        {
+        }
     }
+
     void End() override
     {
-        PYBIND11_OVERRIDE_PURE(void, ICommandHandler, End);
+        try
+        {
+            PYBIND11_OVERRIDE_PURE(void, ICommandHandler, End);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyCommandHandler::End");
+        }
+        catch (const std::exception&)
+        {
+        }
     }
 
     CommandStatus Select(const ControlRelayOutputBlock& command, uint16_t index) override
     {
-        PYBIND11_OVERRIDE_PURE(CommandStatus, ICommandHandler, Select, command, index);
+        try
+        {
+            PYBIND11_OVERRIDE_PURE(CommandStatus, ICommandHandler, Select, command, index);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyCommandHandler::Select");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return CommandStatus::NOT_SUPPORTED;
     }
 
     CommandStatus Operate(const ControlRelayOutputBlock& command,
@@ -55,17 +92,40 @@ public:
                           IUpdateHandler& handler,
                           OperateType opType) override
     {
-        py::gil_scoped_acquire gil;
-        py::function override_fn = py::get_override(this, "Operate");
-        if (override_fn)
-            return override_fn(command, index, py::cast(handler, py::return_value_policy::reference), opType)
-                .cast<CommandStatus>();
-        throw std::runtime_error("Tried to call pure virtual function \"ICommandHandler::Operate\"");
+        try
+        {
+            py::gil_scoped_acquire gil;
+            py::function override_fn = py::get_override(this, "Operate");
+            if (override_fn)
+                return override_fn(command, index, py::cast(handler, py::return_value_policy::reference), opType)
+                    .cast<CommandStatus>();
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyCommandHandler::Operate");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return CommandStatus::NOT_SUPPORTED;
     }
 
     CommandStatus Select(const AnalogOutputInt16& command, uint16_t index) override
     {
-        PYBIND11_OVERRIDE_PURE(CommandStatus, ICommandHandler, Select, command, index);
+        try
+        {
+            PYBIND11_OVERRIDE_PURE(CommandStatus, ICommandHandler, Select, command, index);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyCommandHandler::Select");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return CommandStatus::NOT_SUPPORTED;
     }
 
     CommandStatus Operate(const AnalogOutputInt16& command,
@@ -73,17 +133,40 @@ public:
                           IUpdateHandler& handler,
                           OperateType opType) override
     {
-        py::gil_scoped_acquire gil;
-        py::function override_fn = py::get_override(this, "Operate");
-        if (override_fn)
-            return override_fn(command, index, py::cast(handler, py::return_value_policy::reference), opType)
-                .cast<CommandStatus>();
-        throw std::runtime_error("Tried to call pure virtual function \"ICommandHandler::Operate\"");
+        try
+        {
+            py::gil_scoped_acquire gil;
+            py::function override_fn = py::get_override(this, "Operate");
+            if (override_fn)
+                return override_fn(command, index, py::cast(handler, py::return_value_policy::reference), opType)
+                    .cast<CommandStatus>();
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyCommandHandler::Operate");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return CommandStatus::NOT_SUPPORTED;
     }
 
     CommandStatus Select(const AnalogOutputInt32& command, uint16_t index) override
     {
-        PYBIND11_OVERRIDE_PURE(CommandStatus, ICommandHandler, Select, command, index);
+        try
+        {
+            PYBIND11_OVERRIDE_PURE(CommandStatus, ICommandHandler, Select, command, index);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyCommandHandler::Select");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return CommandStatus::NOT_SUPPORTED;
     }
 
     CommandStatus Operate(const AnalogOutputInt32& command,
@@ -91,17 +174,40 @@ public:
                           IUpdateHandler& handler,
                           OperateType opType) override
     {
-        py::gil_scoped_acquire gil;
-        py::function override_fn = py::get_override(this, "Operate");
-        if (override_fn)
-            return override_fn(command, index, py::cast(handler, py::return_value_policy::reference), opType)
-                .cast<CommandStatus>();
-        throw std::runtime_error("Tried to call pure virtual function \"ICommandHandler::Operate\"");
+        try
+        {
+            py::gil_scoped_acquire gil;
+            py::function override_fn = py::get_override(this, "Operate");
+            if (override_fn)
+                return override_fn(command, index, py::cast(handler, py::return_value_policy::reference), opType)
+                    .cast<CommandStatus>();
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyCommandHandler::Operate");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return CommandStatus::NOT_SUPPORTED;
     }
 
     CommandStatus Select(const AnalogOutputFloat32& command, uint16_t index) override
     {
-        PYBIND11_OVERRIDE_PURE(CommandStatus, ICommandHandler, Select, command, index);
+        try
+        {
+            PYBIND11_OVERRIDE_PURE(CommandStatus, ICommandHandler, Select, command, index);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyCommandHandler::Select");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return CommandStatus::NOT_SUPPORTED;
     }
 
     CommandStatus Operate(const AnalogOutputFloat32& command,
@@ -109,17 +215,40 @@ public:
                           IUpdateHandler& handler,
                           OperateType opType) override
     {
-        py::gil_scoped_acquire gil;
-        py::function override_fn = py::get_override(this, "Operate");
-        if (override_fn)
-            return override_fn(command, index, py::cast(handler, py::return_value_policy::reference), opType)
-                .cast<CommandStatus>();
-        throw std::runtime_error("Tried to call pure virtual function \"ICommandHandler::Operate\"");
+        try
+        {
+            py::gil_scoped_acquire gil;
+            py::function override_fn = py::get_override(this, "Operate");
+            if (override_fn)
+                return override_fn(command, index, py::cast(handler, py::return_value_policy::reference), opType)
+                    .cast<CommandStatus>();
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyCommandHandler::Operate");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return CommandStatus::NOT_SUPPORTED;
     }
 
     CommandStatus Select(const AnalogOutputDouble64& command, uint16_t index) override
     {
-        PYBIND11_OVERRIDE_PURE(CommandStatus, ICommandHandler, Select, command, index);
+        try
+        {
+            PYBIND11_OVERRIDE_PURE(CommandStatus, ICommandHandler, Select, command, index);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyCommandHandler::Select");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return CommandStatus::NOT_SUPPORTED;
     }
 
     CommandStatus Operate(const AnalogOutputDouble64& command,
@@ -127,12 +256,23 @@ public:
                           IUpdateHandler& handler,
                           OperateType opType) override
     {
-        py::gil_scoped_acquire gil;
-        py::function override_fn = py::get_override(this, "Operate");
-        if (override_fn)
-            return override_fn(command, index, py::cast(handler, py::return_value_policy::reference), opType)
-                .cast<CommandStatus>();
-        throw std::runtime_error("Tried to call pure virtual function \"ICommandHandler::Operate\"");
+        try
+        {
+            py::gil_scoped_acquire gil;
+            py::function override_fn = py::get_override(this, "Operate");
+            if (override_fn)
+                return override_fn(command, index, py::cast(handler, py::return_value_policy::reference), opType)
+                    .cast<CommandStatus>();
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyCommandHandler::Operate");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return CommandStatus::NOT_SUPPORTED;
     }
 };
 
@@ -144,63 +284,205 @@ public:
 
     bool SupportsWriteAbsoluteTime() override
     {
-        PYBIND11_OVERRIDE(bool, IOutstationApplication, SupportsWriteAbsoluteTime);
+        try
+        {
+            PYBIND11_OVERRIDE(bool, IOutstationApplication, SupportsWriteAbsoluteTime);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyOutstationApplication::SupportsWriteAbsoluteTime");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return false;
     }
 
     bool WriteAbsoluteTime(const UTCTimestamp& timestamp) override
     {
-        PYBIND11_OVERRIDE(bool, IOutstationApplication, WriteAbsoluteTime, timestamp);
+        try
+        {
+            PYBIND11_OVERRIDE(bool, IOutstationApplication, WriteAbsoluteTime, timestamp);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyOutstationApplication::WriteAbsoluteTime");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return false;
     }
 
     bool SupportsAssignClass() override
     {
-        PYBIND11_OVERRIDE(bool, IOutstationApplication, SupportsAssignClass);
+        try
+        {
+            PYBIND11_OVERRIDE(bool, IOutstationApplication, SupportsAssignClass);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyOutstationApplication::SupportsAssignClass");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return false;
     }
 
     ApplicationIIN GetApplicationIIN() const override
     {
-        PYBIND11_OVERRIDE(ApplicationIIN, IOutstationApplication, GetApplicationIIN);
+        try
+        {
+            PYBIND11_OVERRIDE(ApplicationIIN, IOutstationApplication, GetApplicationIIN);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyOutstationApplication::GetApplicationIIN");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return ApplicationIIN{};
     }
 
     RestartMode ColdRestartSupport() const override
     {
-        PYBIND11_OVERRIDE(RestartMode, IOutstationApplication, ColdRestartSupport);
+        try
+        {
+            PYBIND11_OVERRIDE(RestartMode, IOutstationApplication, ColdRestartSupport);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyOutstationApplication::ColdRestartSupport");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return RestartMode::UNSUPPORTED;
     }
 
     RestartMode WarmRestartSupport() const override
     {
-        PYBIND11_OVERRIDE(RestartMode, IOutstationApplication, WarmRestartSupport);
+        try
+        {
+            PYBIND11_OVERRIDE(RestartMode, IOutstationApplication, WarmRestartSupport);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyOutstationApplication::WarmRestartSupport");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return RestartMode::UNSUPPORTED;
     }
 
     uint16_t ColdRestart() override
     {
-        PYBIND11_OVERRIDE(uint16_t, IOutstationApplication, ColdRestart);
+        try
+        {
+            PYBIND11_OVERRIDE(uint16_t, IOutstationApplication, ColdRestart);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyOutstationApplication::ColdRestart");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return 65535;
     }
 
     uint16_t WarmRestart() override
     {
-        PYBIND11_OVERRIDE(uint16_t, IOutstationApplication, WarmRestart);
+        try
+        {
+            PYBIND11_OVERRIDE(uint16_t, IOutstationApplication, WarmRestart);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyOutstationApplication::WarmRestart");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return 65535;
     }
 
     DNPTime Now() override
     {
-        PYBIND11_OVERRIDE(DNPTime, IOutstationApplication, Now);
+        try
+        {
+            PYBIND11_OVERRIDE(DNPTime, IOutstationApplication, Now);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyOutstationApplication::Now");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return DNPTime(0);
     }
 
     bool SupportsWriteTimeAndInterval() override
     {
-        PYBIND11_OVERRIDE(bool, IOutstationApplication, SupportsWriteTimeAndInterval);
+        try
+        {
+            PYBIND11_OVERRIDE(bool, IOutstationApplication, SupportsWriteTimeAndInterval);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyOutstationApplication::SupportsWriteTimeAndInterval");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return false;
     }
 
     void RecordClassAssignment(AssignClassType type, PointClass clazz, uint16_t start, uint16_t stop) override
     {
-        PYBIND11_OVERRIDE(void, IOutstationApplication, RecordClassAssignment, type, clazz, start, stop);
+        try
+        {
+            PYBIND11_OVERRIDE(void, IOutstationApplication, RecordClassAssignment, type, clazz, start, stop);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyOutstationApplication::RecordClassAssignment");
+        }
+        catch (const std::exception&)
+        {
+        }
     }
 
     void OnConfirmProcessed(bool is_unsolicited, uint32_t num_class1, uint32_t num_class2, uint32_t num_class3) override
     {
-        PYBIND11_OVERRIDE(void, IOutstationApplication, OnConfirmProcessed, is_unsolicited, num_class1, num_class2,
-                          num_class3);
+        try
+        {
+            PYBIND11_OVERRIDE(void, IOutstationApplication, OnConfirmProcessed, is_unsolicited, num_class1, num_class2,
+                              num_class3);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyOutstationApplication::OnConfirmProcessed");
+        }
+        catch (const std::exception&)
+        {
+        }
     }
 };
 
@@ -212,7 +494,19 @@ public:
 
     FileCommandResult GetFileInfo(const std::string& filename) override
     {
-        PYBIND11_OVERRIDE_PURE(FileCommandResult, IFileHandler, GetFileInfo, filename);
+        try
+        {
+            PYBIND11_OVERRIDE_PURE(FileCommandResult, IFileHandler, GetFileInfo, filename);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyFileHandler::GetFileInfo");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return FileCommandResult{FileStatus::FATAL};
     }
 
     FileOpenResult OpenFile(const std::string& filename,
@@ -222,44 +516,127 @@ public:
                             uint16_t maxBlockSize,
                             uint16_t requestId) override
     {
-        PYBIND11_OVERRIDE_PURE(FileOpenResult, IFileHandler, OpenFile, filename, authKey, permissions, mode,
-                               maxBlockSize, requestId);
+        try
+        {
+            PYBIND11_OVERRIDE_PURE(FileOpenResult, IFileHandler, OpenFile, filename, authKey, permissions, mode,
+                                   maxBlockSize, requestId);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyFileHandler::OpenFile");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return FileOpenResult{FileStatus::FATAL};
     }
 
     FileBlockResult ReadBlock(uint32_t fileHandle, uint32_t blockNum) override
     {
-        PYBIND11_OVERRIDE_PURE(FileBlockResult, IFileHandler, ReadBlock, fileHandle, blockNum);
+        try
+        {
+            PYBIND11_OVERRIDE_PURE(FileBlockResult, IFileHandler, ReadBlock, fileHandle, blockNum);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyFileHandler::ReadBlock");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return FileBlockResult{FileStatus::FATAL};
     }
 
     FileStatus WriteBlock(
         uint32_t fileHandle, uint32_t blockNum, bool lastBlock, const uint8_t* data, size_t size) override
     {
-        py::gil_scoped_acquire gil;
-        py::function override_fn = py::get_override(this, "WriteBlock");
-        if (override_fn)
-            return override_fn(fileHandle, blockNum, lastBlock, py::bytes(reinterpret_cast<const char*>(data), size))
-                .cast<FileStatus>();
-        throw std::runtime_error("Tried to call pure virtual function \"IFileHandler::WriteBlock\"");
+        try
+        {
+            py::gil_scoped_acquire gil;
+            py::function override_fn = py::get_override(this, "WriteBlock");
+            if (override_fn)
+                return override_fn(fileHandle, blockNum, lastBlock,
+                                   py::bytes(reinterpret_cast<const char*>(data), size))
+                    .cast<FileStatus>();
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyFileHandler::WriteBlock");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return FileStatus::FATAL;
     }
 
     FileStatus CloseFile(uint32_t fileHandle, uint16_t requestId) override
     {
-        PYBIND11_OVERRIDE_PURE(FileStatus, IFileHandler, CloseFile, fileHandle, requestId);
+        try
+        {
+            PYBIND11_OVERRIDE_PURE(FileStatus, IFileHandler, CloseFile, fileHandle, requestId);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyFileHandler::CloseFile");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return FileStatus::FATAL;
     }
 
     FileStatus DeleteFile(const std::string& filename) override
     {
-        PYBIND11_OVERRIDE_PURE(FileStatus, IFileHandler, DeleteFile, filename);
+        try
+        {
+            PYBIND11_OVERRIDE_PURE(FileStatus, IFileHandler, DeleteFile, filename);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyFileHandler::DeleteFile");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return FileStatus::FATAL;
     }
 
     void AbortFile(uint32_t fileHandle) override
     {
-        PYBIND11_OVERRIDE_PURE(void, IFileHandler, AbortFile, fileHandle);
+        try
+        {
+            PYBIND11_OVERRIDE_PURE(void, IFileHandler, AbortFile, fileHandle);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyFileHandler::AbortFile");
+        }
+        catch (const std::exception&)
+        {
+        }
     }
 
     FileAuthResult AuthenticateFile(const std::string& username, const std::string& password) override
     {
-        PYBIND11_OVERRIDE_PURE(FileAuthResult, IFileHandler, AuthenticateFile, username, password);
+        try
+        {
+            PYBIND11_OVERRIDE_PURE(FileAuthResult, IFileHandler, AuthenticateFile, username, password);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyFileHandler::AuthenticateFile");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return FileAuthResult{};
     }
 };
 

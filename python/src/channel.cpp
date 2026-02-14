@@ -33,6 +33,8 @@ namespace py = pybind11;
 using namespace opendnp3;
 
 // Trampoline for ILogHandler so Python can subclass it
+// Wrapped in try/catch so that Python exceptions on ASIO threads are safely
+// discarded instead of causing std::terminate().
 class PyLogHandler : public ILogHandler
 {
 public:
@@ -40,7 +42,18 @@ public:
 
     void log(ModuleId module, const char* id, LogLevel level, char const* location, char const* message) override
     {
-        PYBIND11_OVERRIDE_PURE(void, ILogHandler, log, module, id, level, location, message);
+        try
+        {
+            PYBIND11_OVERRIDE_PURE(void, ILogHandler, log, module, id, level, location, message);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyLogHandler::log");
+        }
+        catch (const std::exception&)
+        {
+        }
     }
 };
 
@@ -52,9 +65,37 @@ public:
 
     void OnStateChange(ChannelState state) override
     {
-        PYBIND11_OVERRIDE_PURE(void, IChannelListener, OnStateChange, state);
+        try
+        {
+            PYBIND11_OVERRIDE_PURE(void, IChannelListener, OnStateChange, state);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyChannelListener::OnStateChange");
+        }
+        catch (const std::exception&)
+        {
+        }
     }
 };
+
+// Wrap a pybind11-managed shared_ptr so that when C++ releases its last
+// reference (e.g. during Shutdown on an ASIO thread), the Python ref-decrement
+// happens with the GIL held.
+template<typename T> std::shared_ptr<T> gil_safe_shared(std::shared_ptr<T> ptr)
+{
+    if (!ptr)
+        return ptr;
+    auto prevent_release = std::make_shared<std::shared_ptr<T>>(std::move(ptr));
+    return std::shared_ptr<T>(prevent_release->get(), [prevent_release](T*) mutable {
+        if (Py_IsInitialized())
+        {
+            py::gil_scoped_acquire gil;
+            prevent_release.reset();
+        }
+    });
+}
 
 void init_channel(py::module_& m)
 {
@@ -81,15 +122,27 @@ void init_channel(py::module_& m)
     py::class_<IChannel, std::shared_ptr<IChannel>>(m, "IChannel", "Communication channel")
         .def("GetLogFilters", &IChannel::GetLogFilters)
         .def("SetLogFilters", &IChannel::SetLogFilters, py::arg("filters"))
-        .def("AddMaster", &IChannel::AddMaster, py::arg("id"), py::arg("SOEHandler"), py::arg("application"),
-             py::arg("config"), "Add a master session to this channel", py::call_guard<py::gil_scoped_release>())
+        .def(
+            "AddMaster",
+            [](IChannel& self, const std::string& id, std::shared_ptr<ISOEHandler> SOEHandler,
+               std::shared_ptr<IMasterApplication> application, const MasterStackConfig& config) {
+                auto safe_soe = gil_safe_shared(std::move(SOEHandler));
+                auto safe_app = gil_safe_shared(std::move(application));
+                py::gil_scoped_release release;
+                return self.AddMaster(id, safe_soe, safe_app, config);
+            },
+            py::arg("id"), py::arg("SOEHandler"), py::arg("application"), py::arg("config"),
+            "Add a master session to this channel")
         .def(
             "AddOutstation",
             [](IChannel& self, const std::string& id, std::shared_ptr<ICommandHandler> commandHandler,
                std::shared_ptr<IOutstationApplication> application, const OutstationStackConfig& config,
                std::shared_ptr<IFileHandler> fileHandler) {
+                auto safe_cmd = gil_safe_shared(std::move(commandHandler));
+                auto safe_app = gil_safe_shared(std::move(application));
+                auto safe_fh = gil_safe_shared(std::move(fileHandler));
                 py::gil_scoped_release release;
-                return self.AddOutstation(id, commandHandler, application, config, fileHandler);
+                return self.AddOutstation(id, safe_cmd, safe_app, config, safe_fh);
             },
             py::arg("id"), py::arg("commandHandler"), py::arg("application"), py::arg("config"),
             py::arg("fileHandler") = std::shared_ptr<IFileHandler>(nullptr),
@@ -122,9 +175,18 @@ void init_channel(py::module_& m)
                     self.verifyCallback = nullptr;
                     return;
                 }
-                auto cb_ptr = std::make_shared<py::function>(py::reinterpret_borrow<py::function>(cb));
+                auto cb_ptr = std::shared_ptr<py::function>(new py::function(py::reinterpret_borrow<py::function>(cb)),
+                                                            [](py::function* ptr) {
+                                                                if (Py_IsInitialized())
+                                                                {
+                                                                    py::gil_scoped_acquire gil;
+                                                                    delete ptr;
+                                                                }
+                                                            });
                 self.verifyCallback = [cb_ptr](bool preverified, int depth, const std::string& subject,
                                                const std::string& certDER) -> bool {
+                    if (!Py_IsInitialized())
+                        return preverified;
                     py::gil_scoped_acquire gil;
                     return (*cb_ptr)(preverified, depth, subject, py::bytes(certDER.data(), certDER.size()))
                         .cast<bool>();
@@ -134,29 +196,83 @@ void init_channel(py::module_& m)
 
     // DNP3Manager
     py::class_<DNP3Manager>(m, "DNP3Manager", "Root DNP3 object used to create channels and sessions")
-        .def(py::init<uint32_t, std::shared_ptr<ILogHandler>>(), py::arg("concurrencyHint"),
-             py::arg("handler") = std::shared_ptr<ILogHandler>())
+        .def(py::init([](uint32_t concurrencyHint, std::shared_ptr<ILogHandler> handler) {
+                 return new DNP3Manager(concurrencyHint, gil_safe_shared(std::move(handler)));
+             }),
+             py::arg("concurrencyHint"), py::arg("handler") = std::shared_ptr<ILogHandler>())
         .def("Shutdown", &DNP3Manager::Shutdown, py::call_guard<py::gil_scoped_release>())
-        .def("AddTCPClient", &DNP3Manager::AddTCPClient, py::arg("id"), py::arg("levels"), py::arg("retry"),
-             py::arg("hosts"), py::arg("local"), py::arg("listener"), "Add a persistent TCP client channel",
-             py::call_guard<py::gil_scoped_release>())
-        .def("AddOutstationTCPClient", &DNP3Manager::AddOutstationTCPClient, py::arg("id"), py::arg("levels"),
-             py::arg("retry"), py::arg("hosts"), py::arg("local"), py::arg("listener"),
-             "Add a TCP client channel for outstation use (connects to a remote master server)",
-             py::call_guard<py::gil_scoped_release>())
-        .def("AddTCPServer", &DNP3Manager::AddTCPServer, py::arg("id"), py::arg("levels"), py::arg("mode"),
-             py::arg("endpoint"), py::arg("listener"), "Add a persistent TCP server channel",
-             py::call_guard<py::gil_scoped_release>())
-        .def("AddTLSClient", &DNP3Manager::AddTLSClient, py::arg("id"), py::arg("levels"), py::arg("retry"),
-             py::arg("hosts"), py::arg("local"), py::arg("config"), py::arg("listener"),
-             "Add a persistent TLS client channel", py::call_guard<py::gil_scoped_release>())
-        .def("AddTLSServer", &DNP3Manager::AddTLSServer, py::arg("id"), py::arg("levels"), py::arg("mode"),
-             py::arg("endpoint"), py::arg("config"), py::arg("listener"), "Add a persistent TLS server channel",
-             py::call_guard<py::gil_scoped_release>())
-        .def("AddUDPChannel", &DNP3Manager::AddUDPChannel, py::arg("id"), py::arg("levels"), py::arg("retry"),
-             py::arg("localEndpoint"), py::arg("remoteEndpoint"), py::arg("listener"), "Add a persistent UDP channel",
-             py::call_guard<py::gil_scoped_release>())
-        .def("AddSerial", &DNP3Manager::AddSerial, py::arg("id"), py::arg("levels"), py::arg("retry"),
-             py::arg("settings"), py::arg("listener"), "Add a persistent serial channel",
-             py::call_guard<py::gil_scoped_release>());
+        .def(
+            "AddTCPClient",
+            [](DNP3Manager& self, const std::string& id, const LogLevels& levels, const ChannelRetry& retry,
+               const std::vector<IPEndpoint>& hosts, const std::string& local,
+               std::shared_ptr<IChannelListener> listener) {
+                auto safe_listener = gil_safe_shared(std::move(listener));
+                py::gil_scoped_release release;
+                return self.AddTCPClient(id, levels, retry, hosts, local, safe_listener);
+            },
+            py::arg("id"), py::arg("levels"), py::arg("retry"), py::arg("hosts"), py::arg("local"), py::arg("listener"),
+            "Add a persistent TCP client channel")
+        .def(
+            "AddOutstationTCPClient",
+            [](DNP3Manager& self, const std::string& id, const LogLevels& levels, const ChannelRetry& retry,
+               const std::vector<IPEndpoint>& hosts, const std::string& local,
+               std::shared_ptr<IChannelListener> listener) {
+                auto safe_listener = gil_safe_shared(std::move(listener));
+                py::gil_scoped_release release;
+                return self.AddOutstationTCPClient(id, levels, retry, hosts, local, safe_listener);
+            },
+            py::arg("id"), py::arg("levels"), py::arg("retry"), py::arg("hosts"), py::arg("local"), py::arg("listener"),
+            "Add a TCP client channel for outstation use (connects to a remote master server)")
+        .def(
+            "AddTCPServer",
+            [](DNP3Manager& self, const std::string& id, const LogLevels& levels, ServerAcceptMode mode,
+               const IPEndpoint& endpoint, std::shared_ptr<IChannelListener> listener) {
+                auto safe_listener = gil_safe_shared(std::move(listener));
+                py::gil_scoped_release release;
+                return self.AddTCPServer(id, levels, mode, endpoint, safe_listener);
+            },
+            py::arg("id"), py::arg("levels"), py::arg("mode"), py::arg("endpoint"), py::arg("listener"),
+            "Add a persistent TCP server channel")
+        .def(
+            "AddTLSClient",
+            [](DNP3Manager& self, const std::string& id, const LogLevels& levels, const ChannelRetry& retry,
+               const std::vector<IPEndpoint>& hosts, const std::string& local, const TLSConfig& config,
+               std::shared_ptr<IChannelListener> listener) {
+                auto safe_listener = gil_safe_shared(std::move(listener));
+                py::gil_scoped_release release;
+                return self.AddTLSClient(id, levels, retry, hosts, local, config, safe_listener);
+            },
+            py::arg("id"), py::arg("levels"), py::arg("retry"), py::arg("hosts"), py::arg("local"), py::arg("config"),
+            py::arg("listener"), "Add a persistent TLS client channel")
+        .def(
+            "AddTLSServer",
+            [](DNP3Manager& self, const std::string& id, const LogLevels& levels, ServerAcceptMode mode,
+               const IPEndpoint& endpoint, const TLSConfig& config, std::shared_ptr<IChannelListener> listener) {
+                auto safe_listener = gil_safe_shared(std::move(listener));
+                py::gil_scoped_release release;
+                return self.AddTLSServer(id, levels, mode, endpoint, config, safe_listener);
+            },
+            py::arg("id"), py::arg("levels"), py::arg("mode"), py::arg("endpoint"), py::arg("config"),
+            py::arg("listener"), "Add a persistent TLS server channel")
+        .def(
+            "AddUDPChannel",
+            [](DNP3Manager& self, const std::string& id, const LogLevels& levels, const ChannelRetry& retry,
+               const IPEndpoint& localEndpoint, const IPEndpoint& remoteEndpoint,
+               std::shared_ptr<IChannelListener> listener) {
+                auto safe_listener = gil_safe_shared(std::move(listener));
+                py::gil_scoped_release release;
+                return self.AddUDPChannel(id, levels, retry, localEndpoint, remoteEndpoint, safe_listener);
+            },
+            py::arg("id"), py::arg("levels"), py::arg("retry"), py::arg("localEndpoint"), py::arg("remoteEndpoint"),
+            py::arg("listener"), "Add a persistent UDP channel")
+        .def(
+            "AddSerial",
+            [](DNP3Manager& self, const std::string& id, const LogLevels& levels, const ChannelRetry& retry,
+               SerialSettings settings, std::shared_ptr<IChannelListener> listener) {
+                auto safe_listener = gil_safe_shared(std::move(listener));
+                py::gil_scoped_release release;
+                return self.AddSerial(id, levels, retry, settings, safe_listener);
+            },
+            py::arg("id"), py::arg("levels"), py::arg("retry"), py::arg("settings"), py::arg("listener"),
+            "Add a persistent serial channel");
 }

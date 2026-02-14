@@ -51,6 +51,20 @@
 namespace py = pybind11;
 using namespace opendnp3;
 
+// GIL-safe shared_ptr for py::function.
+// Ensures the GIL is held when the py::function destructor runs,
+// preventing crashes when C++ threads destroy callbacks during shutdown.
+inline std::shared_ptr<py::function> make_safe_callback(py::function&& func)
+{
+    return std::shared_ptr<py::function>(new py::function(std::move(func)), [](py::function* ptr) {
+        if (Py_IsInitialized())
+        {
+            py::gil_scoped_acquire gil;
+            delete ptr;
+        }
+    });
+}
+
 // Helper: convert ICollection<T> to std::vector<T>
 template<class T> std::vector<T> ToVector(const ICollection<T>& coll)
 {
@@ -63,6 +77,8 @@ template<class T> std::vector<T> ToVector(const ICollection<T>& coll)
 // Trampoline for ISOEHandler
 // Each Process() override converts the ICollection to a std::vector before
 // dispatching to the Python override so that Python receives a plain list.
+// All overrides are wrapped in try/catch so that Python exceptions on ASIO
+// strand threads are safely discarded instead of causing std::terminate().
 class PySOEHandler : public ISOEHandler
 {
 public:
@@ -70,163 +86,313 @@ public:
 
     void BeginFragment(const ResponseInfo& info) override
     {
-        PYBIND11_OVERRIDE_PURE(void, ISOEHandler, BeginFragment, info);
+        try
+        {
+            PYBIND11_OVERRIDE_PURE(void, ISOEHandler, BeginFragment, info);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PySOEHandler::BeginFragment");
+        }
+        catch (const std::exception&)
+        {
+        }
     }
 
     void EndFragment(const ResponseInfo& info) override
     {
-        PYBIND11_OVERRIDE_PURE(void, ISOEHandler, EndFragment, info);
+        try
+        {
+            PYBIND11_OVERRIDE_PURE(void, ISOEHandler, EndFragment, info);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PySOEHandler::EndFragment");
+        }
+        catch (const std::exception&)
+        {
+        }
     }
 
     void Process(const HeaderInfo& info, const ICollection<Indexed<Binary>>& values) override
     {
         auto items = ToVector(values);
-        py::gil_scoped_acquire gil;
-        py::function override_fn = py::get_override(this, "Process");
-        if (override_fn)
+        try
         {
-            override_fn(info, items);
+            py::gil_scoped_acquire gil;
+            py::function override_fn = py::get_override(this, "Process");
+            if (override_fn)
+                override_fn(info, items);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PySOEHandler::Process");
+        }
+        catch (const std::exception&)
+        {
         }
     }
 
     void Process(const HeaderInfo& info, const ICollection<Indexed<DoubleBitBinary>>& values) override
     {
         auto items = ToVector(values);
-        py::gil_scoped_acquire gil;
-        py::function override_fn = py::get_override(this, "Process");
-        if (override_fn)
+        try
         {
-            override_fn(info, items);
+            py::gil_scoped_acquire gil;
+            py::function override_fn = py::get_override(this, "Process");
+            if (override_fn)
+                override_fn(info, items);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PySOEHandler::Process");
+        }
+        catch (const std::exception&)
+        {
         }
     }
 
     void Process(const HeaderInfo& info, const ICollection<Indexed<Analog>>& values) override
     {
         auto items = ToVector(values);
-        py::gil_scoped_acquire gil;
-        py::function override_fn = py::get_override(this, "Process");
-        if (override_fn)
+        try
         {
-            override_fn(info, items);
+            py::gil_scoped_acquire gil;
+            py::function override_fn = py::get_override(this, "Process");
+            if (override_fn)
+                override_fn(info, items);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PySOEHandler::Process");
+        }
+        catch (const std::exception&)
+        {
         }
     }
 
     void Process(const HeaderInfo& info, const ICollection<Indexed<Counter>>& values) override
     {
         auto items = ToVector(values);
-        py::gil_scoped_acquire gil;
-        py::function override_fn = py::get_override(this, "Process");
-        if (override_fn)
+        try
         {
-            override_fn(info, items);
+            py::gil_scoped_acquire gil;
+            py::function override_fn = py::get_override(this, "Process");
+            if (override_fn)
+                override_fn(info, items);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PySOEHandler::Process");
+        }
+        catch (const std::exception&)
+        {
         }
     }
 
     void Process(const HeaderInfo& info, const ICollection<Indexed<FrozenCounter>>& values) override
     {
         auto items = ToVector(values);
-        py::gil_scoped_acquire gil;
-        py::function override_fn = py::get_override(this, "Process");
-        if (override_fn)
+        try
         {
-            override_fn(info, items);
+            py::gil_scoped_acquire gil;
+            py::function override_fn = py::get_override(this, "Process");
+            if (override_fn)
+                override_fn(info, items);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PySOEHandler::Process");
+        }
+        catch (const std::exception&)
+        {
         }
     }
 
     void Process(const HeaderInfo& info, const ICollection<Indexed<BinaryOutputStatus>>& values) override
     {
         auto items = ToVector(values);
-        py::gil_scoped_acquire gil;
-        py::function override_fn = py::get_override(this, "Process");
-        if (override_fn)
+        try
         {
-            override_fn(info, items);
+            py::gil_scoped_acquire gil;
+            py::function override_fn = py::get_override(this, "Process");
+            if (override_fn)
+                override_fn(info, items);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PySOEHandler::Process");
+        }
+        catch (const std::exception&)
+        {
         }
     }
 
     void Process(const HeaderInfo& info, const ICollection<Indexed<AnalogOutputStatus>>& values) override
     {
         auto items = ToVector(values);
-        py::gil_scoped_acquire gil;
-        py::function override_fn = py::get_override(this, "Process");
-        if (override_fn)
+        try
         {
-            override_fn(info, items);
+            py::gil_scoped_acquire gil;
+            py::function override_fn = py::get_override(this, "Process");
+            if (override_fn)
+                override_fn(info, items);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PySOEHandler::Process");
+        }
+        catch (const std::exception&)
+        {
         }
     }
 
     void Process(const HeaderInfo& info, const ICollection<Indexed<OctetString>>& values) override
     {
         auto items = ToVector(values);
-        py::gil_scoped_acquire gil;
-        py::function override_fn = py::get_override(this, "Process");
-        if (override_fn)
+        try
         {
-            override_fn(info, items);
+            py::gil_scoped_acquire gil;
+            py::function override_fn = py::get_override(this, "Process");
+            if (override_fn)
+                override_fn(info, items);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PySOEHandler::Process");
+        }
+        catch (const std::exception&)
+        {
         }
     }
 
     void Process(const HeaderInfo& info, const ICollection<Indexed<TimeAndInterval>>& values) override
     {
         auto items = ToVector(values);
-        py::gil_scoped_acquire gil;
-        py::function override_fn = py::get_override(this, "Process");
-        if (override_fn)
+        try
         {
-            override_fn(info, items);
+            py::gil_scoped_acquire gil;
+            py::function override_fn = py::get_override(this, "Process");
+            if (override_fn)
+                override_fn(info, items);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PySOEHandler::Process");
+        }
+        catch (const std::exception&)
+        {
         }
     }
 
     void Process(const HeaderInfo& info, const ICollection<Indexed<BinaryCommandEvent>>& values) override
     {
         auto items = ToVector(values);
-        py::gil_scoped_acquire gil;
-        py::function override_fn = py::get_override(this, "Process");
-        if (override_fn)
+        try
         {
-            override_fn(info, items);
+            py::gil_scoped_acquire gil;
+            py::function override_fn = py::get_override(this, "Process");
+            if (override_fn)
+                override_fn(info, items);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PySOEHandler::Process");
+        }
+        catch (const std::exception&)
+        {
         }
     }
 
     void Process(const HeaderInfo& info, const ICollection<Indexed<AnalogCommandEvent>>& values) override
     {
         auto items = ToVector(values);
-        py::gil_scoped_acquire gil;
-        py::function override_fn = py::get_override(this, "Process");
-        if (override_fn)
+        try
         {
-            override_fn(info, items);
+            py::gil_scoped_acquire gil;
+            py::function override_fn = py::get_override(this, "Process");
+            if (override_fn)
+                override_fn(info, items);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PySOEHandler::Process");
+        }
+        catch (const std::exception&)
+        {
         }
     }
 
     void Process(const HeaderInfo& info, const ICollection<Indexed<AnalogInputDeadband>>& values) override
     {
         auto items = ToVector(values);
-        py::gil_scoped_acquire gil;
-        py::function override_fn = py::get_override(this, "Process");
-        if (override_fn)
+        try
         {
-            override_fn(info, items);
+            py::gil_scoped_acquire gil;
+            py::function override_fn = py::get_override(this, "Process");
+            if (override_fn)
+                override_fn(info, items);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PySOEHandler::Process");
+        }
+        catch (const std::exception&)
+        {
         }
     }
 
     void Process(const HeaderInfo& info, const ICollection<DNPTime>& values) override
     {
         auto items = ToVector(values);
-        py::gil_scoped_acquire gil;
-        py::function override_fn = py::get_override(this, "Process");
-        if (override_fn)
+        try
         {
-            override_fn(info, items);
+            py::gil_scoped_acquire gil;
+            py::function override_fn = py::get_override(this, "Process");
+            if (override_fn)
+                override_fn(info, items);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PySOEHandler::Process");
+        }
+        catch (const std::exception&)
+        {
         }
     }
 
     void OnRawAPDU(const ResponseInfo& info, const uint8_t* data, size_t length) override
     {
-        py::gil_scoped_acquire gil;
-        py::function override_fn = py::get_override(this, "OnRawAPDU");
-        if (override_fn)
-            override_fn(info, py::bytes(reinterpret_cast<const char*>(data), length));
+        try
+        {
+            py::gil_scoped_acquire gil;
+            py::function override_fn = py::get_override(this, "OnRawAPDU");
+            if (override_fn)
+                override_fn(info, py::bytes(reinterpret_cast<const char*>(data), length));
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PySOEHandler::OnRawAPDU");
+        }
+        catch (const std::exception&)
+        {
+        }
     }
 
     void OnDeviceAttribute(const HeaderInfo& info,
@@ -234,10 +400,21 @@ public:
                            uint8_t variation,
                            const DeviceAttributeValue& value) override
     {
-        py::gil_scoped_acquire gil;
-        py::function override_fn = py::get_override(this, "OnDeviceAttribute");
-        if (override_fn)
-            override_fn(info, set, variation, value);
+        try
+        {
+            py::gil_scoped_acquire gil;
+            py::function override_fn = py::get_override(this, "OnDeviceAttribute");
+            if (override_fn)
+                override_fn(info, set, variation, value);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PySOEHandler::OnDeviceAttribute");
+        }
+        catch (const std::exception&)
+        {
+        }
     }
 };
 
@@ -249,37 +426,116 @@ public:
 
     void OnReceiveIIN(const IINField& iin) override
     {
-        PYBIND11_OVERRIDE(void, IMasterApplication, OnReceiveIIN, iin);
+        try
+        {
+            PYBIND11_OVERRIDE(void, IMasterApplication, OnReceiveIIN, iin);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyMasterApplication::OnReceiveIIN");
+        }
+        catch (const std::exception&)
+        {
+        }
     }
 
     void OnTaskStart(MasterTaskType type, TaskId id) override
     {
-        PYBIND11_OVERRIDE(void, IMasterApplication, OnTaskStart, type, id);
+        try
+        {
+            PYBIND11_OVERRIDE(void, IMasterApplication, OnTaskStart, type, id);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyMasterApplication::OnTaskStart");
+        }
+        catch (const std::exception&)
+        {
+        }
     }
 
     void OnTaskComplete(const TaskInfo& info) override
     {
-        PYBIND11_OVERRIDE(void, IMasterApplication, OnTaskComplete, info);
+        try
+        {
+            PYBIND11_OVERRIDE(void, IMasterApplication, OnTaskComplete, info);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyMasterApplication::OnTaskComplete");
+        }
+        catch (const std::exception&)
+        {
+        }
     }
 
     void OnOpen() override
     {
-        PYBIND11_OVERRIDE(void, IMasterApplication, OnOpen);
+        try
+        {
+            PYBIND11_OVERRIDE(void, IMasterApplication, OnOpen);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyMasterApplication::OnOpen");
+        }
+        catch (const std::exception&)
+        {
+        }
     }
 
     void OnClose() override
     {
-        PYBIND11_OVERRIDE(void, IMasterApplication, OnClose);
+        try
+        {
+            PYBIND11_OVERRIDE(void, IMasterApplication, OnClose);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyMasterApplication::OnClose");
+        }
+        catch (const std::exception&)
+        {
+        }
     }
 
     bool AssignClassDuringStartup() override
     {
-        PYBIND11_OVERRIDE(bool, IMasterApplication, AssignClassDuringStartup);
+        try
+        {
+            PYBIND11_OVERRIDE(bool, IMasterApplication, AssignClassDuringStartup);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyMasterApplication::AssignClassDuringStartup");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return false;
     }
 
     UTCTimestamp Now() override
     {
-        PYBIND11_OVERRIDE_PURE(UTCTimestamp, IMasterApplication, Now);
+        try
+        {
+            PYBIND11_OVERRIDE_PURE(UTCTimestamp, IMasterApplication, Now);
+        }
+        catch (py::error_already_set& e)
+        {
+            py::gil_scoped_acquire gil;
+            e.discard_as_unraisable("PyMasterApplication::Now");
+        }
+        catch (const std::exception&)
+        {
+        }
+        return UTCTimestamp(0);
     }
 };
 
@@ -383,7 +639,7 @@ void init_master(py::module_& m)
             "SelectAndOperate",
             [](IMaster& self, const ControlRelayOutputBlock& command, uint16_t index, py::function callback,
                const TaskConfig& config) {
-                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto cb_ptr = make_safe_callback(std::move(callback));
                 auto safe_cb = [cb_ptr](const ICommandTaskResult& result) mutable {
                     auto snap = CommandTaskResultSnapshot::From(result);
                     py::gil_scoped_acquire gil;
@@ -398,7 +654,7 @@ void init_master(py::module_& m)
             "SelectAndOperate",
             [](IMaster& self, const AnalogOutputInt16& command, uint16_t index, py::function callback,
                const TaskConfig& config) {
-                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto cb_ptr = make_safe_callback(std::move(callback));
                 auto safe_cb = [cb_ptr](const ICommandTaskResult& result) mutable {
                     auto snap = CommandTaskResultSnapshot::From(result);
                     py::gil_scoped_acquire gil;
@@ -412,7 +668,7 @@ void init_master(py::module_& m)
             "SelectAndOperate",
             [](IMaster& self, const AnalogOutputInt32& command, uint16_t index, py::function callback,
                const TaskConfig& config) {
-                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto cb_ptr = make_safe_callback(std::move(callback));
                 auto safe_cb = [cb_ptr](const ICommandTaskResult& result) mutable {
                     auto snap = CommandTaskResultSnapshot::From(result);
                     py::gil_scoped_acquire gil;
@@ -426,7 +682,7 @@ void init_master(py::module_& m)
             "SelectAndOperate",
             [](IMaster& self, const AnalogOutputFloat32& command, uint16_t index, py::function callback,
                const TaskConfig& config) {
-                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto cb_ptr = make_safe_callback(std::move(callback));
                 auto safe_cb = [cb_ptr](const ICommandTaskResult& result) mutable {
                     auto snap = CommandTaskResultSnapshot::From(result);
                     py::gil_scoped_acquire gil;
@@ -440,7 +696,7 @@ void init_master(py::module_& m)
             "SelectAndOperate",
             [](IMaster& self, const AnalogOutputDouble64& command, uint16_t index, py::function callback,
                const TaskConfig& config) {
-                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto cb_ptr = make_safe_callback(std::move(callback));
                 auto safe_cb = [cb_ptr](const ICommandTaskResult& result) mutable {
                     auto snap = CommandTaskResultSnapshot::From(result);
                     py::gil_scoped_acquire gil;
@@ -454,7 +710,7 @@ void init_master(py::module_& m)
             "DirectOperate",
             [](IMaster& self, const ControlRelayOutputBlock& command, uint16_t index, py::function callback,
                const TaskConfig& config) {
-                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto cb_ptr = make_safe_callback(std::move(callback));
                 auto safe_cb = [cb_ptr](const ICommandTaskResult& result) mutable {
                     auto snap = CommandTaskResultSnapshot::From(result);
                     py::gil_scoped_acquire gil;
@@ -469,7 +725,7 @@ void init_master(py::module_& m)
             "DirectOperate",
             [](IMaster& self, const AnalogOutputInt16& command, uint16_t index, py::function callback,
                const TaskConfig& config) {
-                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto cb_ptr = make_safe_callback(std::move(callback));
                 auto safe_cb = [cb_ptr](const ICommandTaskResult& result) mutable {
                     auto snap = CommandTaskResultSnapshot::From(result);
                     py::gil_scoped_acquire gil;
@@ -483,7 +739,7 @@ void init_master(py::module_& m)
             "DirectOperate",
             [](IMaster& self, const AnalogOutputInt32& command, uint16_t index, py::function callback,
                const TaskConfig& config) {
-                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto cb_ptr = make_safe_callback(std::move(callback));
                 auto safe_cb = [cb_ptr](const ICommandTaskResult& result) mutable {
                     auto snap = CommandTaskResultSnapshot::From(result);
                     py::gil_scoped_acquire gil;
@@ -497,7 +753,7 @@ void init_master(py::module_& m)
             "DirectOperate",
             [](IMaster& self, const AnalogOutputFloat32& command, uint16_t index, py::function callback,
                const TaskConfig& config) {
-                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto cb_ptr = make_safe_callback(std::move(callback));
                 auto safe_cb = [cb_ptr](const ICommandTaskResult& result) mutable {
                     auto snap = CommandTaskResultSnapshot::From(result);
                     py::gil_scoped_acquire gil;
@@ -511,7 +767,7 @@ void init_master(py::module_& m)
             "DirectOperate",
             [](IMaster& self, const AnalogOutputDouble64& command, uint16_t index, py::function callback,
                const TaskConfig& config) {
-                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto cb_ptr = make_safe_callback(std::move(callback));
                 auto safe_cb = [cb_ptr](const ICommandTaskResult& result) mutable {
                     auto snap = CommandTaskResultSnapshot::From(result);
                     py::gil_scoped_acquire gil;
@@ -525,7 +781,7 @@ void init_master(py::module_& m)
         .def(
             "ReadFile",
             [](IMaster& self, const std::string& filename, py::function callback, const TaskConfig& config) {
-                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto cb_ptr = make_safe_callback(std::move(callback));
                 auto safe_cb = [cb_ptr](const FileReadResult& result) mutable {
                     auto snap = result;
                     py::gil_scoped_acquire gil;
@@ -541,7 +797,7 @@ void init_master(py::module_& m)
             "ReadFileWithAuth",
             [](IMaster& self, const std::string& filename, uint32_t authKey, py::function callback,
                const TaskConfig& config) {
-                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto cb_ptr = make_safe_callback(std::move(callback));
                 auto safe_cb = [cb_ptr](const FileReadResult& result) mutable {
                     auto snap = result;
                     py::gil_scoped_acquire gil;
@@ -559,7 +815,7 @@ void init_master(py::module_& m)
                py::function callback, const TaskConfig& config) {
                 std::string raw = data;
                 std::vector<uint8_t> vec(raw.begin(), raw.end());
-                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto cb_ptr = make_safe_callback(std::move(callback));
                 auto safe_cb = [cb_ptr](const FileWriteResult& result) mutable {
                     auto snap = result;
                     py::gil_scoped_acquire gil;
@@ -577,7 +833,7 @@ void init_master(py::module_& m)
                uint32_t authKey, py::function callback, const TaskConfig& config) {
                 std::string raw = data;
                 std::vector<uint8_t> vec(raw.begin(), raw.end());
-                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto cb_ptr = make_safe_callback(std::move(callback));
                 auto safe_cb = [cb_ptr](const FileWriteResult& result) mutable {
                     auto snap = result;
                     py::gil_scoped_acquire gil;
@@ -593,7 +849,7 @@ void init_master(py::module_& m)
         .def(
             "DeleteFile",
             [](IMaster& self, const std::string& filename, py::function callback, const TaskConfig& config) {
-                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto cb_ptr = make_safe_callback(std::move(callback));
                 auto safe_cb = [cb_ptr](const FileOperationResult& result) mutable {
                     auto snap = result;
                     py::gil_scoped_acquire gil;
@@ -608,7 +864,7 @@ void init_master(py::module_& m)
         .def(
             "GetFileInfo",
             [](IMaster& self, const std::string& filename, py::function callback, const TaskConfig& config) {
-                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto cb_ptr = make_safe_callback(std::move(callback));
                 auto safe_cb = [cb_ptr](const FileInfoResult& result) mutable {
                     auto snap = result;
                     py::gil_scoped_acquire gil;
@@ -623,7 +879,7 @@ void init_master(py::module_& m)
         .def(
             "ReadDirectory",
             [](IMaster& self, const std::string& path, py::function callback, const TaskConfig& config) {
-                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto cb_ptr = make_safe_callback(std::move(callback));
                 auto safe_cb = [cb_ptr](const DirectoryReadResult& result) mutable {
                     auto snap = result;
                     py::gil_scoped_acquire gil;
@@ -638,7 +894,7 @@ void init_master(py::module_& m)
         .def(
             "AbortFile",
             [](IMaster& self, uint32_t fileHandle, py::function callback, const TaskConfig& config) {
-                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto cb_ptr = make_safe_callback(std::move(callback));
                 auto safe_cb = [cb_ptr](const FileOperationResult& result) mutable {
                     auto snap = result;
                     py::gil_scoped_acquire gil;
@@ -654,7 +910,7 @@ void init_master(py::module_& m)
             "AuthenticateFile",
             [](IMaster& self, const std::string& username, const std::string& password, py::function callback,
                const TaskConfig& config) {
-                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto cb_ptr = make_safe_callback(std::move(callback));
                 auto safe_cb = [cb_ptr](const FileAuthResult_t& result) mutable {
                     auto snap = result;
                     py::gil_scoped_acquire gil;
@@ -671,7 +927,7 @@ void init_master(py::module_& m)
             "WriteDeadBands",
             [](IMaster& self, const std::vector<Indexed<AnalogInputDeadband>>& deadBands, py::function callback,
                const TaskConfig& config) {
-                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto cb_ptr = make_safe_callback(std::move(callback));
                 auto safe_cb = [cb_ptr](const FileOperationResult& result) mutable {
                     auto snap = result;
                     py::gil_scoped_acquire gil;
@@ -686,7 +942,7 @@ void init_master(py::module_& m)
         .def(
             "CheckLinkStatus",
             [](IMaster& self, py::function callback) {
-                auto cb_ptr = std::make_shared<py::function>(std::move(callback));
+                auto cb_ptr = make_safe_callback(std::move(callback));
                 auto safe_cb = [cb_ptr](bool success) mutable {
                     py::gil_scoped_acquire gil;
                     (*cb_ptr)(success);

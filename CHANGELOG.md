@@ -1,3 +1,11 @@
+### 3.2.1.1 (f0rw4rd fork) ###
+
+Python binding safety:
+* Fix GIL crash on Shutdown: callback py::function destructors now run with GIL held (make_safe_callback)
+* Fix GIL crash on Shutdown: trampoline shared_ptr release now holds GIL (gil_safe_shared)
+* Add exception safety to all 51 trampoline methods: Python exceptions on ASIO threads are discarded via discard_as_unraisable() instead of causing std::terminate()
+* Fix TLS verify callback race during interpreter shutdown (Py_IsInitialized check)
+
 ### 3.2.0.1 (f0rw4rd fork) ###
 
 Bug fixes:
